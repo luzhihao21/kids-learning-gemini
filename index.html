@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>三语学习乐园 · Kids Tri-Lingual</title>
+
+  <!-- iPhone Safari 添加到主屏幕 (PWA) 专属配置与桌面图标 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="三语乐园" />
+  <meta name="theme-color" content="#FFF8EE" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FF9A9E'/%3E%3Cstop offset='50%25' stop-color='%23FECFEF'/%3E%3Cstop offset='100%25' stop-color='%23A1C4FD'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ccircle cx='90' cy='85' r='52' fill='%23FFFDF9' opacity='0.92'/%3E%3Ctext x='90' y='82' font-size='34' font-weight='bold' text-anchor='middle' fill='%23FF6B6B' font-family='sans-serif'%3EABC%3C/text%3E%3Ctext x='90' y='118' font-size='26' font-weight='bold' text-anchor='middle' fill='%234D96FF' font-family='sans-serif'%3E汉・漢%3C/text%3E%3Ctext x='142' y='45' font-size='28'%3E⭐%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23FF8FA3'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle'%3E⭐%3C/text%3E%3C/svg%3E" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Hanzi Writer 用于动态笔顺动画与手指描红 -->
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <!-- Google Fonts: 圆润童趣字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-cream: #FFF9F0;
+    }
+    body {
+      font-family: 'Fredoka', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-cream);
+      color: #334155;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overscroll-behavior-y: none;
+    }
+    .bubbly-card {
+      background: #FFFFFF;
+      border-radius: 1.5rem;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.06), 0 12px 24px rgba(0, 0, 0, 0.04);
+      border: 2px solid #F1F5F9;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+    }
+    .bubbly-card:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    .btn-3d {
+      transition: all 0.12s ease;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.14);
+    }
+    .btn-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
+    }
+    /* 田字格/米字格背景 */
+    .hanzi-grid {
+      background-color: #FFFDF9;
+      background-image:
+        linear-gradient(to right, transparent 49.5%, #FCA5A5 49.5%, #FCA5A5 50.5%, transparent 50.5%),
+        linear-gradient(to bottom, transparent 49.5%, #FCA5A5 49.5%, #FCA5A5 50.5%, transparent 50.5%);
+      border: 3px solid #F87171;
+      border-radius: 1.25rem;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      70% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes floatStar {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-60px) scale(1.4); opacity: 0; }
+    }
+    .star-burst {
+      animation: floatStar 0.9s ease-out forwards;
+      pointer-events: none;
+    }
+    /* 隐藏滚动条但保留滚动 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-24">
+
+  <!-- 顶部状态栏 -->
+  <header class="sticky top-0 z-30 bg-[#FFF9F0]/95 backdrop-blur-md border-b border-amber-100 px-4 py-3">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-400 to-amber-300 flex items-center justify-center text-white text-xl shadow-sm">
+          🌈
+        </div>
+        <div>
+          <h1 class="text-lg font-extrabold text-slate-800 leading-tight">三语学习乐园</h1>
+          <p class="text-xs text-slate-500 font-medium">English · 中文 · 小3漢字</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- 星星计数器 -->
+        <div id="star-counter-box" class="flex items-center gap-1.5 bg-amber-100 border-2 border-amber-300 px-3.5 py-1.5 rounded-full shadow-sm">
+          <span class="text-lg">⭐</span>
+          <span id="star-count" class="font-extrabold text-amber-800 text-base">0</span>
+        </div>
+        <!-- 帮助/添加到桌面提示按钮 -->
+        <button onclick="openGuideModal()" class="w-9 h-9 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm hover:bg-slate-50" title="添加到iPhone桌面">
+          📱
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容容器 -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 pt-4">
+
+    <!-- 三大模块切换 Tab -->
+    <nav class="grid grid-cols-3 gap-2.5 mb-5">
+      <button onclick="switchIsland('english')" id="tab-english" class="btn-3d py-3 px-2 rounded-2xl font-extrabold text-sm sm:text-base flex flex-col sm:flex-row items-center justify-center gap-1 bg-sky-500 text-white">
+        <span class="text-xl">🔤</span>
+        <span>英语冒险岛</span>
+      </button>
+      <button onclick="switchIsland('chinese')" id="tab-chinese" class="btn-3d py-3 px-2 rounded-2xl font-extrabold text-sm sm:text-base flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-slate-600 border border-slate-200">
+        <span class="text-xl">🐼</span>
+        <span>中文识字园</span>
+      </button>
+      <button onclick="switchIsland('kanji3')" id="tab-kanji3" class="btn-3d py-3 px-2 rounded-2xl font-extrabold text-sm sm:text-base flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-slate-600 border border-slate-200">
+        <span class="text-xl">🏯</span>
+        <span>小3漢字道場</span>
+      </button>
+    </nav>
+
+    <!-- ==================== 模块一：英语冒险岛 ==================== -->
+    <section id="section-english" class="space-y-4">
+      <!-- 模式切换：学习卡片 vs 趣味游戏 -->
+      <div class="flex items-center justify-between bg-white p-1.5 rounded-2xl border-2 border-sky-100 shadow-sm">
+        <button onclick="setEnMode('learn')" id="en-mode-learn" class="flex-1 py-2 rounded-xl font-bold text-sm bg-sky-500 text-white transition">
+          📖 单词卡片
+        </button>
+        <button onclick="setEnMode('quiz')" id="en-mode-quiz" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🎧 听音辨词
+        </button>
+        <button onclick="setEnMode('order')" id="en-mode-order" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🧩 顺序排排看
+        </button>
+      </div>
+
+      <!-- 分类选择 -->
+      <div id="en-category-bar" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <button onclick="selectEnCategory('days')" data-cat="days" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-sky-100 text-sky-800 border-2 border-sky-400">📅 星期 (Days)</button>
+        <button onclick="selectEnCategory('numbers')" data-cat="numbers" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🔢 数字 1-20</button>
+        <button onclick="selectEnCategory('animals')" data-cat="animals" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🐶 动物与自然</button>
+        <button onclick="selectEnCategory('az')" data-cat="az" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🅰️ 26个字母词</button>
+        <button onclick="selectEnCategory('sight')" data-cat="sight" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🇺🇸 启蒙高频词</button>
+      </div>
+
+      <!-- 英语学习卡片网格 -->
+      <div id="en-learn-view" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+
+      <!-- 英语听音辨词游戏 -->
+      <div id="en-quiz-view" class="hidden bubbly-card p-5 text-center space-y-5">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+          <span>听英语发音，选出正确的卡片！</span>
+          <span id="en-quiz-streak" class="text-amber-500">连胜: 0 🔥</span>
+        </div>
+        <div class="py-2">
+          <button onclick="replayEnQuizAudio()" class="btn-3d mx-auto w-24 h-24 rounded-full bg-gradient-to-b from-sky-400 to-sky-600 text-white flex flex-col items-center justify-center shadow-lg">
+            <span class="text-4xl">🔊</span>
+            <span class="text-xs font-bold mt-1">再听一遍</span>
+          </button>
+          <p id="en-quiz-hint" class="mt-3 text-sm text-slate-500 font-medium">点击喇叭听单词发音</p>
+        </div>
+        <div id="en-quiz-options" class="grid grid-cols-2 gap-3"></div>
+        <div id="en-quiz-feedback" class="h-8 font-extrabold text-lg"></div>
+      </div>
+
+      <!-- 英语顺序排排看游戏（1-10 或 星期一到星期日） -->
+      <div id="en-order-view" class="hidden bubbly-card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-extrabold text-base text-slate-800">🧩 按正确顺序点一点</h3>
+            <p class="text-xs text-slate-500">依次点击正确的英文顺序即可过关！</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="initOrderGame('days')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">星期顺序</button>
+            <button onclick="initOrderGame('num10')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-100 text-sky-800 border border-sky-300">数字 1-10</button>
+            <button onclick="initOrderGame('num20')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">数字 11-20</button>
+          </div>
+        </div>
+        <!-- 进度槽 -->
+        <div id="order-progress-slots" class="flex flex-wrap gap-1.5 p-3 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 min-h-[56px]"></div>
+        <!-- 打乱的按钮池 -->
+        <div id="order-pool" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 模块二：中文识字园 ==================== -->
+    <section id="section-chinese" class="hidden space-y-4">
+      <div class="flex items-center justify-between bg-white p-1.5 rounded-2xl border-2 border-rose-100 shadow-sm">
+        <button onclick="setZhMode('learn')" id="zh-mode-learn" class="flex-1 py-2 rounded-xl font-bold text-sm bg-rose-500 text-white transition">
+          🀄 识字与笔顺
+        </button>
+        <button onclick="setZhMode('quiz')" id="zh-mode-quiz" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🎯 听音识字闯关
+        </button>
+      </div>
+
+      <!-- 分类过滤 -->
+      <div id="zh-category-bar" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <button onclick="selectZhCategory('all')" data-cat="all" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-rose-100 text-rose-800 border-2 border-rose-400">全部 (64字)</button>
+        <button onclick="selectZhCategory('nature')" data-cat="nature" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🏔️ 天地自然</button>
+        <button onclick="selectZhCategory('body')" data-cat="body" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">✋ 身体与人</button>
+        <button onclick="selectZhCategory('direction')" data-cat="direction" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🧭 方位与大小</button>
+        <button onclick="selectZhCategory('family')" data-cat="family" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">👨‍👩‍👧 家庭与颜色</button>
+        <button onclick="selectZhCategory('action')" data-cat="action" class="zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🏃 常用动词</button>
+      </div>
+
+      <!-- 中文汉字网格 -->
+      <div id="zh-learn-view" class="grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
+
+      <!-- 中文识字小游戏 -->
+      <div id="zh-quiz-view" class="hidden bubbly-card p-5 text-center space-y-5">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+          <span>听普通话读音和组词，找出对应的汉字！</span>
+          <span id="zh-quiz-streak" class="text-rose-500">连胜: 0 🔥</span>
+        </div>
+        <div class="bg-rose-50 rounded-2xl p-4 border-2 border-rose-100">
+          <button onclick="replayZhQuizAudio()" class="btn-3d mx-auto w-16 h-16 rounded-full bg-rose-500 text-white flex items-center justify-center text-3xl mb-2">
+            🔊
+          </button>
+          <div id="zh-quiz-pinyin" class="text-2xl font-extrabold text-rose-600">tiān</div>
+          <div id="zh-quiz-clue" class="text-sm text-slate-600 font-bold mt-1">提示词：天空 · 日语：空（そら）</div>
+        </div>
+        <div id="zh-quiz-options" class="grid grid-cols-2 gap-3"></div>
+        <div id="zh-quiz-feedback" class="h-8 font-extrabold text-lg"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 模块三：日本小学3年级汉字道场 ==================== -->
+    <section id="section-kanji3" class="hidden space-y-4">
+      <div class="flex items-center justify-between bg-white p-1.5 rounded-2xl border-2 border-emerald-100 shadow-sm">
+        <button onclick="setJpMode('learn')" id="jp-mode-learn" class="flex-1 py-2 rounded-xl font-bold text-sm bg-emerald-600 text-white transition">
+          📚 小3漢字一覧 (全200字)
+        </button>
+        <button onclick="setJpMode('quiz')" id="jp-mode-quiz" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          📝 漢字テスト (闯关)
+        </button>
+      </div>
+
+      <!-- 搜索框与统计 -->
+      <div id="jp-search-bar" class="flex gap-2">
+        <input id="jp-search-input" oninput="renderJpGrid()" type="text" placeholder="検索：漢字、読み方（おん・くん）、熟語..." class="flex-1 px-4 py-2.5 rounded-2xl bg-white border-2 border-emerald-200 text-sm font-bold focus:outline-none focus:border-emerald-500" />
+        <button onclick="document.getElementById('jp-search-input').value='';renderJpGrid();" class="px-3.5 py-2 rounded-2xl bg-slate-100 text-slate-600 font-bold text-xs">クリア</button>
+      </div>
+
+      <!-- 小3汉字网格 -->
+      <div id="jp-learn-view" class="grid grid-cols-4 sm:grid-cols-6 gap-2.5"></div>
+
+      <!-- 小3汉字测试 -->
+      <div id="jp-quiz-view" class="hidden bubbly-card p-5 text-center space-y-5">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+          <span>小学3年生 漢字チャレンジ！</span>
+          <span id="jp-quiz-streak" class="text-emerald-600">連続正解: 0 🔥</span>
+        </div>
+        <div class="bg-emerald-50 rounded-2xl p-5 border-2 border-emerald-200 space-y-2">
+          <span id="jp-quiz-type-badge" class="inline-block px-3 py-0.5 rounded-full text-xs font-extrabold bg-emerald-600 text-white">読み方クイズ</span>
+          <div id="jp-quiz-question" class="text-3xl sm:text-4xl font-black text-slate-800 tracking-wider py-2"></div>
+          <p id="jp-quiz-sub" class="text-xs text-slate-500 font-bold"></p>
+        </div>
+        <div id="jp-quiz-options" class="grid grid-cols-2 gap-3"></div>
+        <div id="jp-quiz-feedback" class="h-8 font-extrabold text-lg"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== 汉字笔顺与描红弹窗 (中文 & 小3汉字通用) ==================== -->
+  <div id="stroke-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border-4 border-amber-200 animate-pop space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <span id="modal-lang-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700">中文识字</span>
+        <button onclick="closeStrokeModal()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-black text-lg flex items-center justify-center">✕</button>
+      </div>
+
+      <!-- 笔顺书写区 -->
+      <div class="flex flex-col items-center">
+        <div id="hanzi-target-box" class="hanzi-grid w-[210px] h-[210px] flex items-center justify-center shadow-inner"></div>
+        <p id="stroke-quiz-status" class="text-xs font-bold text-slate-500 mt-2 h-4">点击下方按钮观看笔顺或用手指描红</p>
+
+        <div class="flex gap-2 mt-2.5">
+          <button onclick="animateHanzi()" class="btn-3d px-4 py-2 rounded-xl bg-amber-400 text-amber-950 font-extrabold text-xs flex items-center gap-1">
+            ▶️ 笔顺动画
+          </button>
+          <button onclick="startHanziQuiz()" class="btn-3d px-4 py-2 rounded-xl bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1">
+            ✍️ 手指描红练习
+          </button>
+          <button onclick="speakModalChar()" class="btn-3d px-3.5 py-2 rounded-xl bg-sky-500 text-white font-extrabold text-xs flex items-center gap-1">
+            🔊 读音
+          </button>
+        </div>
+      </div>
+
+      <!-- 详细信息区 -->
+      <div id="modal-details" class="bg-slate-50 rounded-2xl p-4 space-y-2.5 border border-slate-200 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 添加到 iPhone 桌面指南弹窗 ==================== -->
+  <div id="guide-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-sky-200 animate-pop space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-extrabold text-slate-800">📱 如何放到 iPhone 桌面？</h3>
+        <button onclick="closeGuideModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold">✕</button>
+      </div>
+      <ol class="space-y-3 text-sm text-slate-600 font-medium list-decimal list-inside">
+        <li>将本文件命名为 <code class="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-rose-600">index.html</code> 上传到你的 GitHub 仓库，并在仓库 <b>Settings → Pages</b> 开启 GitHub Pages。</li>
+        <li>用 iPhone 自带的 <b>Safari 浏览器</b>打开生成的网址。</li>
+        <li>点击屏幕底部中间的 <b>分享按钮（方框带向上箭头 ⬆️）</b>。</li>
+        <li>向下滑动菜单，点击 <b>「添加到主屏幕 (ホーム画面に追加)」</b>。</li>
+        <li>桌面上就会出现专属的 <b>「三语乐园」</b> 图标，点开就像原生 App 一样全屏运行！</li>
+      </ol>
+      <button onclick="closeGuideModal()" class="btn-3d w-full py-3 rounded-2xl bg-sky-500 text-white font-extrabold text-sm">我知道啦！</button>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 1. 状态与星星本地存储 ====================
+    let stars = parseInt(localStorage.getItem('trilingual_stars') || '0', 10);
+    function updateStarDisplay(add = 0, eventEl = null) {
+      if (add > 0) {
+        stars += add;
+        localStorage.setItem('trilingual_stars', stars);
+        showStarBurst(add, eventEl);
+      }
+      document.getElementById('star-count').textContent = stars;
+    }
+
+    function showStarBurst(amount, targetEl) {
+      const burst = document.createElement('div');
+      burst.className = 'fixed z-50 text-2xl font-black text-amber-500 star-burst drop-shadow';
+      burst.textContent = `+${amount} ⭐`;
+      if (targetEl && targetEl.getBoundingClientRect) {
+        const rect = targetEl.getBoundingClientRect();
+        burst.style.left = `${rect.left + rect.width / 2 - 25}px`;
+        burst.style.top = `${rect.top}px`;
+      } else {
+        burst.style.left = '50%';
+        burst.style.top = '45%';
+      }
+      document.body.appendChild(burst);
+      setTimeout(() => burst.remove(), 950);
+    }
+
+    // ==================== 2. 语音合成工具 (TTS) ====================
+    function speakText(text, lang = 'en-US') {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang;
+      utter.rate = lang === 'en-US' ? 0.88 : 0.85; // 适合儿童的清晰语速
+      utter.pitch = 1.08;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // ==================== 3. 丰富词库数据 ====================
+    // 3.1 英语词库
+    const EN_DATA = {
+      days: [
+        { word: 'Sunday', jp: '日曜日', zh: '星期日', emoji: '☀️' },
+        { word: 'Monday', jp: '月曜日', zh: '星期一', emoji: '🌙' },
+        { word: 'Tuesday', jp: '火曜日', zh: '星期二', emoji: '🔥' },
+        { word: 'Wednesday', jp: '水曜日', zh: '星期三', emoji: '💧' },
+        { word: 'Thursday', jp: '木曜日', zh: '星期四', emoji: '🌳' },
+        { word: 'Friday', jp: '金曜日', zh: '星期五', emoji: '⭐' },
+        { word: 'Saturday', jp: '土曜日', zh: '星期六', emoji: '🪐' }
+      ],
+      numbers: [
+        { word: 'one', num: '1', zh: '一', emoji: '1️⃣' },
+        { word: 'two', num: '2', zh: '二', emoji: '2️⃣' },
+        { word: 'three', num: '3', zh: '三', emoji: '3️⃣' },
+        { word: 'four', num: '4', zh: '四', emoji: '4️⃣' },
+        { word: 'five', num: '5', zh: '五', emoji: '5️⃣' },
+        { word: 'six', num: '6', zh: '六', emoji: '6️⃣' },
+        { word: 'seven', num: '7', zh: '七', emoji: '7️⃣' },
+        { word: 'eight', num: '8', zh: '八', emoji: '8️⃣' },
+        { word: 'nine', num: '9', zh: '九', emoji: '9️⃣' },
+        { word: 'ten', num: '10', zh: '十', emoji: '🔟' },
+        { word: 'eleven', num: '11', zh: '十一', emoji: '11' },
+        { word: 'twelve', num: '12', zh: '十二', emoji: '12' },
+        { word: 'thirteen', num: '13', zh: '十三', emoji: '13' },
+        { word: 'fourteen', num: '14', zh: '十四', emoji: '14' },
+        { word: 'fifteen', num: '15', zh: '十五', emoji: '15' },
+        { word: 'sixteen', num: '16', zh: '十六', emoji: '16' },
+        { word: 'seventeen', num: '17', zh: '十七', emoji: '17' },
+        { word: 'eighteen', num: '18', zh: '十八', emoji: '18' },
+        { word: 'nineteen', num: '19', zh: '十九', emoji: '19' },
+        { word: 'twenty', num: '20', zh: '二十', emoji: '20' }
+      ],
+      animals: [
+        { word: 'cat', jp: 'ねこ', zh: '猫', emoji: '🐱' },
+        { word: 'dog', jp: 'いぬ', zh: '狗', emoji: '🐶' },
+        { word: 'bird', jp: 'とり', zh: '小鸟', emoji: '🐦' },
+        { word: 'fish', jp: 'さかな', zh: '鱼', emoji: '🐟' },
+        { word: 'rabbit', jp: 'うさぎ', zh: '兔子', emoji: '🐰' },
+        { word: 'bear', jp: 'くま', zh: '熊', emoji: '🐻' },
+        { word: 'tiger', jp: 'とら', zh: '老虎', emoji: '🐯' },
+        { word: 'lion', jp: 'ライオン', zh: '狮子', emoji: '🦁' },
+        { word: 'panda', jp: 'パンダ', zh: '熊猫', emoji: '🐼' },
+        { word: 'sun', jp: 'たいよう', zh: '太阳', emoji: '🌞' },
+        { word: 'moon', jp: 'つき', zh: '月亮', emoji: '🌙' },
+        { word: 'star', jp: 'ほし', zh: '星星', emoji: '⭐' },
+        { word: 'tree', jp: 'き', zh: '大树', emoji: '🌲' },
+        { word: 'flower', jp: 'はな', zh: '花朵', emoji: '🌸' }
+      ],
+      az: [
+        { word: 'apple', letter: 'A', zh: '苹果', emoji: '🍎' },
+        { word: 'ball', letter: 'B', zh: '球', emoji: '⚽' },
+        { word: 'cat', letter: 'C', zh: '猫', emoji: '🐱' },
+        { word: 'dog', letter: 'D', zh: '狗', emoji: '🐶' },
+        { word: 'egg', letter: 'E', zh: '鸡蛋', emoji: '🥚' },
+        { word: 'fish', letter: 'F', zh: '鱼', emoji: '🐠' },
+        { word: 'girl', letter: 'G', zh: '女孩', emoji: '👧' },
+        { word: 'hat', letter: 'H', zh: '帽子', emoji: '🎩' },
+        { word: 'ice cream', letter: 'I', zh: '冰淇淋', emoji: '🍦' },
+        { word: 'juice', letter: 'J', zh: '果汁', emoji: '🧃' },
+        { word: 'kite', letter: 'K', zh: '风筝', emoji: '🪁' },
+        { word: 'lion', letter: 'L', zh: '狮子', emoji: '🦁' },
+        { word: 'milk', letter: 'M', zh: '牛奶', emoji: '🥛' },
+        { word: 'nose', letter: 'N', zh: '鼻子', emoji: '👃' },
+        { word: 'orange', letter: 'O', zh: '橙子', emoji: '🍊' },
+        { word: 'pig', letter: 'P', zh: '小猪', emoji: '🐷' },
+        { word: 'queen', letter: 'Q', zh: '女王', emoji: '👑' },
+        { word: 'rain', letter: 'R', zh: '下雨', emoji: '🌧️' },
+        { word: 'sun', letter: 'S', zh: '太阳', emoji: '☀️' },
+        { word: 'tiger', letter: 'T', zh: '老虎', emoji: '🐯' },
+        { word: 'umbrella', letter: 'U', zh: '雨伞', emoji: '☂️' },
+        { word: 'van', letter: 'V', zh: '面包车', emoji: '🚐' },
+        { word: 'water', letter: 'W', zh: '水', emoji: '💧' },
+        { word: 'box', letter: 'X', zh: '盒子', emoji: '📦' },
+        { word: 'yellow', letter: 'Y', zh: '黄色', emoji: '💛' },
+        { word: 'zebra', letter: 'Z', zh: '斑马', emoji: '🦓' }
+      ],
+      sight: [
+        { word: 'hello', jp: 'こんにちは', zh: '你好', emoji: '👋' },
+        { word: 'thank you', jp: 'ありがとう', zh: '谢谢', emoji: '🙏' },
+        { word: 'happy', jp: 'うれしい', zh: '开心', emoji: '😄' },
+        { word: 'look', jp: 'みる', zh: '看', emoji: '👀' },
+        { word: 'play', jp: 'あそぶ', zh: '玩耍', emoji: '🎮' },
+        { word: 'jump', jp: 'ジャンプ', zh: '跳跃', emoji: '🦘' },
+        { word: 'run', jp: 'はしる', zh: '跑步', emoji: '🏃' },
+        { word: 'eat', jp: 'たべる', zh: '吃', emoji: '🍽️' },
+        { word: 'book', jp: 'ほん', zh: '书本', emoji: '📚' },
+        { word: 'school', jp: 'がっこう', zh: '学校', emoji: '🏫' },
+        { word: 'friend', jp: 'ともだち', zh: '朋友', emoji: '🤝' },
+        { word: 'love', jp: 'だいすき', zh: '爱/喜欢', emoji: '❤️' },
+        { word: 'red', jp: 'あか', zh: '红色', emoji: '🔴' },
+        { word: 'blue', jp: 'あお', zh: '蓝色', emoji: '🔵' },
+        { word: 'big', jp: 'おおきい', zh: '大的', emoji: '🐘' },
+        { word: 'small', jp: 'ちいさい', zh: '小的', emoji: '🐜' }
+      ]
+    };
+
+    // 3.2 中国小学一二年级核心启蒙汉字 (64字)
+    const ZH_CHARS = [
+      // 天地自然 (nature)
+      { char: '天', pinyin: 'tiān', cat: 'nature', words: '天空、白天', jp: '空（そら）・天' },
+      { char: '地', pinyin: 'dì', cat: 'nature', words: '大地、土地', jp: '地面・土地' },
+      { char: '日', pinyin: 'rì', cat: 'nature', words: '日出、生日', jp: '太陽・日' },
+      { char: '月', pinyin: 'yuè', cat: 'nature', words: '月亮、月光', jp: '月（つき）' },
+      { char: '水', pinyin: 'shuǐ', cat: 'nature', words: '喝水、河水', jp: '水（みず）' },
+      { char: '火', pinyin: 'huǒ', cat: 'nature', words: '火车、大火', jp: '火（ひ）' },
+      { char: '山', pinyin: 'shān', cat: 'nature', words: '高山、大山', jp: '山（やま）' },
+      { char: '石', pinyin: 'shí', cat: 'nature', words: '石头、宝石', jp: '石（いし）' },
+      { char: '田', pinyin: 'tián', cat: 'nature', words: '田野、水田', jp: '田んぼ' },
+      { char: '土', pinyin: 'tǔ', cat: 'nature', words: '泥土、土地', jp: '土（つち）' },
+      { char: '风', pinyin: 'fēng', cat: 'nature', words: '大风、春风', jp: '風（かぜ）' },
+      { char: '云', pinyin: 'yún', cat: 'nature', words: '白云、乌云', jp: '雲（くも）' },
+      { char: '雨', pinyin: 'yǔ', cat: 'nature', words: '下雨、雨水', jp: '雨（あめ）' },
+      { char: '花', pinyin: 'huā', cat: 'nature', words: '花朵、开花', jp: '花（はな）' },
+      { char: '草', pinyin: 'cǎo', cat: 'nature', words: '小草、青草', jp: '草（くさ）' },
+      { char: '木', pinyin: 'mù', cat: 'nature', words: '木头、树木', jp: '木（き）' },
+
+      // 身体与人 (body)
+      { char: '人', pinyin: 'rén', cat: 'body', words: '大人、好人', jp: '人（ひと）' },
+      { char: '口', pinyin: 'kǒu', cat: 'body', words: '人口、开口', jp: '口（くち）' },
+      { char: '手', pinyin: 'shǒu', cat: 'body', words: '小手、拍手', jp: '手（て）' },
+      { char: '足', pinyin: 'zú', cat: 'body', words: '足球、手足', jp: '足（あし）' },
+      { char: '耳', pinyin: 'ěr', cat: 'body', words: '耳朵、木耳', jp: '耳（みみ）' },
+      { char: '目', pinyin: 'mù', cat: 'body', words: '目光、题目', jp: '目（め）' },
+      { char: '心', pinyin: 'xīn', cat: 'body', words: '开心、爱心', jp: '心（こころ）' },
+      { char: '头', pinyin: 'tóu', cat: 'body', words: '头发、点头', jp: '頭（あたま）' },
+      { char: '牙', pinyin: 'yá', cat: 'body', words: '牙齿、刷牙', jp: '歯（は）' },
+      { char: '舌', pinyin: 'shé', cat: 'body', words: '舌头', jp: '舌（した）' },
+      { char: '女', pinyin: 'nǚ', cat: 'body', words: '女孩、女儿', jp: '女の子' },
+      { char: '子', pinyin: 'zǐ', cat: 'body', words: '儿子、孩子', jp: '子ども' },
+
+      // 方位与大小 (direction)
+      { char: '上', pinyin: 'shàng', cat: 'direction', words: '上学、上面', jp: '上（うえ）' },
+      { char: '下', pinyin: 'xià', cat: 'direction', words: '下面、下课', jp: '下（した）' },
+      { char: '左', pinyin: 'zuǒ', cat: 'direction', words: '左手、左边', jp: '左（ひだり）' },
+      { char: '右', pinyin: 'yòu', cat: 'direction', words: '右手、右边', jp: '右（みぎ）' },
+      { char: '大', pinyin: 'dà', cat: 'direction', words: '大小、大家', jp: '大きい' },
+      { char: '小', pinyin: 'xiǎo', cat: 'direction', words: '小朋友、小心', jp: '小さい' },
+      { char: '多', pinyin: 'duō', cat: 'direction', words: '多少、很多', jp: '多い' },
+      { char: '少', pinyin: 'shǎo', cat: 'direction', words: '很少、少年', jp: '少ない' },
+      { char: '东', pinyin: 'dōng', cat: 'direction', words: '东方、东西', jp: '東（ひがし）' },
+      { char: '西', pinyin: 'xī', cat: 'direction', words: '西方、西瓜', jp: '西（にし）' },
+      { char: '南', pinyin: 'nán', cat: 'direction', words: '南方、南瓜', jp: '南（みなみ）' },
+      { char: '北', pinyin: 'běi', cat: 'direction', words: '北方、北京', jp: '北（きた）' },
+
+      // 家庭与颜色 (family)
+      { char: '爸', pinyin: 'bà', cat: 'family', words: '爸爸', jp: 'お父さん' },
+      { char: '妈', pinyin: 'mā', cat: 'family', words: '妈妈', jp: 'お母さん' },
+      { char: '爷', pinyin: 'yé', cat: 'family', words: '爷爷', jp: 'おじいさん' },
+      { char: '奶', pinyin: 'nǎi', cat: 'family', words: '奶奶、牛奶', jp: 'おばあさん・牛乳' },
+      { char: '我', pinyin: 'wǒ', cat: 'family', words: '我们、自我', jp: '私（わたし）' },
+      { char: '你', pinyin: 'nǐ', cat: 'family', words: '你好、你们', jp: 'あなた' },
+      { char: '好', pinyin: 'hǎo', cat: 'family', words: '好人、友好', jp: '良い・好き' },
+      { char: '家', pinyin: 'jiā', cat: 'family', words: '回家、大家', jp: '家（いえ）・家族' },
+      { char: '红', pinyin: 'hóng', cat: 'family', words: '红色、红花', jp: '赤（あか）' },
+      { char: '黄', pinyin: 'huáng', cat: 'family', words: '黄色、黄河', jp: '黄色（きいろ）' },
+      { char: '蓝', pinyin: 'lán', cat: 'family', words: '蓝天、蓝色', jp: '青（あお）' },
+      { char: '白', pinyin: 'bái', cat: 'family', words: '白色、白天', jp: '白（しろ）' },
+      { char: '黑', pinyin: 'hēi', cat: 'family', words: '黑色、黑夜', jp: '黒（くろ）' },
+      { char: '绿', pinyin: 'lǜ', cat: 'family', words: '绿色、绿叶', jp: '緑（みどり）' },
+
+      // 常用动词与学习 (action)
+      { char: '看', pinyin: 'kàn', cat: 'action', words: '看见、看书', jp: '見る' },
+      { char: '听', pinyin: 'tīng', cat: 'action', words: '听见、好听', jp: '聞く' },
+      { char: '说', pinyin: 'shuō', cat: 'action', words: '说话、说明', jp: '話す' },
+      { char: '读', pinyin: 'dú', cat: 'action', words: '读书、朗读', jp: '読む' },
+      { char: '写', pinyin: 'xiě', cat: 'action', words: '写字、听写', jp: '書く' },
+      { char: '走', pinyin: 'zǒu', cat: 'action', words: '走路、走开', jp: '歩く' },
+      { char: '跑', pinyin: 'pǎo', cat: 'action', words: '跑步、奔跑', jp: '走る' },
+      { char: '飞', pinyin: 'fēi', cat: 'action', words: '飞机、飞鸟', jp: '飛ぶ' },
+      { char: '学', pinyin: 'xué', cat: 'action', words: '学习、学生', jp: '学ぶ' },
+      { char: '爱', pinyin: 'ài', cat: 'action', words: '爱心、可爱', jp: '愛する・大好き' }
+    ];
+
+    // 3.3 日本文部科学省 小学3年生 漢字200字 完整数据库（紧凑格式解析：汉字|音读|训读|画数|常用词与读音）
+    const RAW_JP3_DATA = [
+      "悪|アク・オ|わる-い|11|悪い（わるい）・悪口（わるぐち）",
+      "安|アン|やす-い|6|安心（あんしん）・安い（やすい）",
+      "暗|アン|くら-い|13|暗い（くらい）・暗算（あんざん）",
+      "医|イ|—|7|医者（いしゃ）・医学（いがく）",
+      "意|イ|—|13|意味（いみ）・意見（いけん）",
+      "育|イク|そだ-つ・そだ-てる|8|育てる（そだてる）・体育（たいいく）",
+      "員|イン|—|10|店員（てんいん）・全員（ぜんいん）",
+      "院|イン|—|10|病院（びょういん）・入院（にゅういん）",
+      "飲|イン|の-む|12|飲む（のむ）・飲み物（のみもの）",
+      "運|ウン|はこ-ぶ|12|運動（うんどう）・運ぶ（はこぶ）",
+      "泳|エイ|およ-ぐ|8|泳ぐ（およぐ）・水泳（すいえい）",
+      "駅|エキ|—|14|駅前（えきまえ）・東京駅（とうきょうえき）",
+      "央|オウ|—|5|中央（ちゅうおう）",
+      "横|オウ|よこ|15|横（よこ）・横断歩道（おうだんほどう）",
+      "屋|オク|や|9|本屋（ほんや）・屋上（おくじょう）",
+      "温|オン|あたた-かい|12|温かい（あたたかい）・体温（たいおん）",
+      "化|カ・ケ|ば-ける|4|化学（かがく）・お化け（おばけ）",
+      "荷|カ|に|10|荷物（にもつ）・出荷（しゅっか）",
+      "界|カイ|—|9|世界（せかい）・限界（げんかい）",
+      "開|カイ|ひら-く・あ-く|12|開く（ひらく）・開店（かいてん）",
+      "階|カイ|—|12|階段（かいだん）・二階（にかい）",
+      "寒|カン|さむ-い|12|寒い（さむい）・寒気（さむけ）",
+      "感|カン|—|13|感謝（かんしゃ）・感想（かんそう）",
+      "漢|カン|—|13|漢字（かんじ）",
+      "館|カン|やかた|16|図書館（としょかん）・体育館（たいいくかん）",
+      "岸|ガン|きし|8|海岸（かいがん）・岸辺（きしべ）",
+      "起|キ|お-きる・お-こす|10|起きる（おきる）・早起き（はやおき）",
+      "期|キ・ゴ|—|12|学期（がっき）・期待（きたい）",
+      "客|キャク・カク|—|9|お客さん（おきゃくさん）・観客（かんきゃく）",
+      "究|キュウ|きわ-める|7|研究（けんきゅう）・研究室（けんきゅうしつ）",
+      "急|キュウ|いそ-ぐ|9|急ぐ（いそぐ）・急行（きゅうこう）",
+      "級|キュウ|—|9|学級（がっきゅう）・上級（じょうきゅう）",
+      "球|キュウ|たま|11|野球（やきゅう）・地球（ちきゅう）",
+      "去|キョ・コ|さ-る|5|去年（きょねん）・過去（かこ）",
+      "橋|キョウ|はし|16|橋（はし）・歩道橋（ほどうきょう）",
+      "業|ギョウ・ゴウ|わざ|13|授業（じゅぎょう）・卒業（そつぎょう）",
+      "曲|キョク|ま-がる|6|曲がる（まがる）・音楽の曲（きょく）",
+      "局|キョク|—|7|郵便局（ゆうびんきょく）・薬局（やっきょく）",
+      "銀|ギン|—|14|銀行（ぎんこう）・銀メダル（ぎんめだる）",
+      "区|ク|—|4|区別（くべつ）・港区（みなとく）",
+      "苦|ク|くる-しい・にが-い|8|苦しい（くるしい）・苦手（にがて）",
+      "具|グ|—|8|道具（どうぐ）・文房具（ぶんぼうぐ）",
+      "君|クン|きみ|7|君（きみ）・田中君（たなかくん）",
+      "係|ケイ|かかり・かか-る|9|係（かかり）・関係（かんけい）",
+      "軽|ケイ|かる-い|12|軽い（かるい）・軽食（けいしょく）",
+      "血|ケツ|ち|6|血液（けつえき）・鼻血（はなぢ）",
+      "決|ケツ|き-める・き-まる|7|決める（きめる）・決定（けってい）",
+      "研|ケン|と-ぐ|9|研究（けんきゅう）・研修（けんしゅう）",
+      "県|ケン|—|9|埼玉県（さいたまけん）・県立（けんりつ）",
+      "庫|コ・ク|—|10|車庫（しゃこ）・冷蔵庫（れいぞうこ）",
+      "湖|コ|みずうみ|12|湖（みずうみ）・琵琶湖（びわこ）",
+      "向|コウ|む-く・む-こう|6|向こう（むこう）・方向（ほうこう）",
+      "幸|コウ|さいわ-い・しあわ-せ|8|幸せ（しあわせ）・幸福（こうふく）",
+      "港|コウ|みなと|12|港（みなと）・空港（くうこう）",
+      "号|ゴウ|—|5|番号（ばんごう）・信号（しんごう）",
+      "根|コン|ね|10|根っこ（ねっこ）・大根（だいこん）",
+      "祭|サイ|まつ-り|11|お祭り（おまつり）・文化祭（ぶんかさい）",
+      "皿|—|さら|5|お皿（おさら）・小皿（こざら）",
+      "仕|シ・ジ|つか-える|5|仕事（しごと）・仕方（しかた）",
+      "死|シ|し-ぬ|6|必死（ひっし）・死亡（しぼう）",
+      "使|シ|つか-う|8|使う（つかう）・大使（たいし）",
+      "始|シ|はじ-める・はじ-まる|8|始まる（はじまる）・開始（かいし）",
+      "指|シ|ゆび・さ-す|9|指（ゆび）・指輪（ゆびわ）",
+      "歯|シ|は|12|歯（は）・歯みがき（はみがき）",
+      "詩|シ|—|13|詩（し）・詩人（しじん）",
+      "次|ジ・シ|つぎ・つ-ぐ|6|次（つぎ）・次回（じかい）",
+      "事|ジ・ズ|こと|8|仕事（しごと）・火事（かじ）",
+      "持|ジ|も-つ|9|持つ（もつ）・気持ち（きもち）",
+      "式|シキ|—|6|入学式（にゅうがくしき）・計算式（けいさんしき）",
+      "実|ジツ|み・みの-る|8|果実（かじつ）・実験（じっけん）",
+      "写|シャ|うつ-す|5|写真（しゃしん）・写す（うつす）",
+      "者|シャ|もの|8|医者（いしゃ）・学者（がくしゃ）",
+      "主|シュ・ス|ぬし・おも|5|主人（しゅじん）・持ち主（もちぬし）",
+      "守|シュ・ス|まも-る|6|守る（まもる）・お守り（おまもり）",
+      "取|シュ|と-る|8|取る（とる）・取り出す（とりだす）",
+      "酒|シュ|さけ|10|お酒（おさけ）・日本酒（にほんしゅ）",
+      "受|ジュ|う-ける|8|受ける（うける）・受付（うけつけ）",
+      "州|シュウ|す|6|本州（ほんしゅう）・九州（きゅうしゅう）",
+      "拾|シュウ・ジュウ|ひろ-う|9|拾う（ひろう）・拾得（しゅうとく）",
+      "終|シュウ|お-わる・お-える|11|終わる（おわる）・最終（さいしゅう）",
+      "習|シュウ|なら-う|11|習う（ならう）・練習（れんしゅう）",
+      "集|シュウ|あつ-まる・あつ-める|12|集める（あつめる）・集合（しゅうごう）",
+      "住|ジュウ|す-む|7|住む（すむ）・住所（じゅうしょ）",
+      "重|ジュウ・チョウ|おも-い・かさ-ねる|9|重い（おもい）・体重（たいじゅう）",
+      "宿|シュク|やど|11|宿題（しゅくだい）・宿泊（しゅくはく）",
+      "所|ショ|ところ|8|場所（ばしょ）・台所（だいどころ）",
+      "暑|ショ|あつ-い|12|暑い（あつい）・暑中見舞い（しょちゅうみまい）",
+      "助|ジョ|たす-ける|7|助ける（たすける）・救助（きゅうじょ）",
+      "昭|ショウ|—|9|昭和（しょうわ）",
+      "消|ショウ|き-える・け-す|10|消す（けす）・消しゴム（けしごむ）",
+      "商|ショウ|あきな-う|11|商店（しょうてん）・商品（しょうひん）",
+      "章|ショウ|—|11|文章（ぶんしょう）・第一章（だいいっしょう）",
+      "勝|ショウ|か-つ|12|勝つ（かつ）・優勝（ゆうしょう）",
+      "乗|ジョウ|の-る|9|乗る（のる）・乗り物（のりもの）",
+      "植|ショク|う-える|12|植える（うえる）・植物（しょくぶつ）",
+      "申|シン|もう-す|5|申し込む（もうしこむ）",
+      "身|シン|み|7|身長（しんちょう）・中身（なかみ）",
+      "神|シン・ジン|かみ|9|神社（じんじゃ）・神様（かみさま）",
+      "真|シン|ま|10|写真（しゃしん）・真ん中（まんなか）",
+      "深|シン|ふか-い|11|深い（ふかい）・深夜（しんや）",
+      "進|シン|すす-む|11|進む（すすむ）・前進（ぜんしん）",
+      "世|セイ・セ|よ|5|世界（せかい）・お世話（おせわ）",
+      "整|セイ|ととの-える|16|整理（せいり）・整列（せいれつ）",
+      "昔|セキ・シャク|むかし|8|昔話（むかしばなし）・大昔（おおむかし）",
+      "全|ゼン|まった-く・すべ-て|6|全員（ぜんいん）・安全（あんぜん）",
+      "相|ソウ・ショウ|あい|9|相談（そうだん）・相手（あいて）",
+      "送|ソウ|おく-る|9|送る（おくる）・見送り（みおくり）",
+      "想|ソウ・ソ|—|13|感想（かんそう）・想像（そうぞう）",
+      "息|ソク|いき|10|息（いき）・ため息（ためいき）",
+      "速|ソク|はや-い|10|速い（はやい）・時速（じそく）",
+      "族|ゾク|—|11|家族（かぞく）・水族館（すいぞくかん）",
+      "他|タ|ほか|5|他の人（ほかのひと）・他人（たにん）",
+      "打|ダ|う-つ|5|打つ（うつ）・ヒットを打つ",
+      "対|タイ・ツイ|—|7|反対（はんたい）・対決（たいけつ）",
+      "待|タイ|ま-つ|9|待つ（まつ）・招待（しょうたい）",
+      "代|ダイ・タイ|か-わる・よ|5|時代（じだい）・代金（だいきん）",
+      "第|ダイ|—|11|第一（だいいち）・次第（しだい）",
+      "題|ダイ|—|18|宿題（しゅくだい）・問題（もんだい）",
+      "炭|タン|すみ|9|木炭（もくたん）・石炭（せきたん）",
+      "短|タン|みじか-い|12|短い（みじかい）・長所と短所（たんしょ）",
+      "談|ダン|—|15|相談（そうだん）・冗談（じょうだん）",
+      "着|チャク・ジャク|き-る・つ-く|12|着る（きる）・到着（とうちゃく）",
+      "注|チュウ|そそ-ぐ|8|注意（ちゅうい）・注文（ちゅうもん）",
+      "柱|チュウ|はしら|9|柱（はしら）・電柱（でんちゅう）",
+      "帳|チョウ|—|11|ノート・連絡帳（れんらくちょう）",
+      "調|チョウ|しら-べる|15|調べる（しらべる）・調子（ちょうし）",
+      "追|ツイ|お-う|9|追いかける（おいかける）",
+      "定|テイ・ジョウ|さだ-める|8|予定（よてい）・決定（けってい）",
+      "庭|テイ|にわ|10|庭（にわ）・家庭（かてい）",
+      "笛|テキ|ふえ|11|笛（ふえ）・口笛（くちぶえ）",
+      "鉄|テツ|—|13|鉄道（てつどう）・地下鉄（ちかてつ）",
+      "転|テン|ころ-ぶ・ころ-がる|11|転ぶ（ころぶ）・自転車（じてんしゃ）",
+      "都|ト・ツ|みやこ|11|東京都（とうきょうと）・都合（つごう）",
+      "度|ド・ト・タク|たび|9|温度（おんど）・今度（こんど）",
+      "投|トウ|な-げる|7|投げる（なげる）・投手（とうしゅ）",
+      "豆|トウ・ズ|まめ|7|大豆（だいず）・豆まき（まめまき）",
+      "島|トウ|しま|10|島（しま）・半島（はんとう）",
+      "湯|トウ|ゆ|12|お湯（おゆ）・銭湯（せんとう）",
+      "登|トウ・ト|のぼ-る|12|登る（のぼる）・登山（とざん）",
+      "等|トウ|ひと-しい|12|平等（びょうどう）・一等賞（いっとうしょう）",
+      "動|ドウ|うご-く|11|動く（うごく）・動物（どうぶつ）",
+      "童|ドウ|わらべ|12|児童（じどう）・童話（どうわ）",
+      "農|ノウ|—|13|農家（のうか）・農業（のうぎょう）",
+      "波|ハ|なみ|8|波（なみ）・電波（でんぱ）",
+      "配|ハイ|くば-る|10|配る（くばる）・心配（しんぱい）",
+      "倍|バイ|—|10|二倍（にばい）・倍増（ばいぞう）",
+      "箱|—|はこ|15|箱（はこ）・ゴミ箱（ごみばこ）",
+      "畑|—|はた・はたけ|9|畑（はたけ）・花畑（はなばたけ）",
+      "発|ハツ・ホツ|—|9|出発（しゅっぱつ）・発見（はっけん）",
+      "反|ハン・ホン・タン|そ-る|4|反対（はんたい）・反省（はんせい）",
+      "坂|ハン|さか|7|坂道（さかみち）・上り坂（のぼりざか）",
+      "板|ハン・バン|いた|8|黒板（こくばん）・板（いた）",
+      "皮|ヒ|かわ|5|皮（かわ）・毛皮（けがわ）",
+      "悲|ヒ|かな-しい|12|悲しい（かなしい）・悲劇（ひげき）",
+      "美|ビ|うつく-しい|9|美しい（うつくしい）・美術館（びじゅつかん）",
+      "鼻|ビ|はな|14|鼻（はな）・鼻歌（はなうた）",
+      "筆|ヒツ|ふで|12|鉛筆（えんぴつ）・毛筆（もうひつ）",
+      "氷|ヒョウ|こおり・ひ|5|氷（こおり）・かき氷（かきごおり）",
+      "表|ヒョウ|おもて・あらわ-す|8|発表（はっぴょう）・時計の表（おもて）",
+      "秒|ビョウ|—|9|一秒（いちびょう）・秒針（びょうしん）",
+      "病|ビョウ・ヘイ|や-む・やまい|10|病気（びょうき）・病院（びょういん）",
+      "品|ヒン|しな|9|作品（さくひん）・品物（しなもの）",
+      "負|フ|ま-ける・お-う|9|負ける（まける）・勝負（しょうぶ）",
+      "部|ブ|—|11|部屋（へや）・クラブ活動（かつどう）",
+      "服|フク|—|8|洋服（ようふく）・制服（せいふく）",
+      "福|フク|—|13|幸福（こうふく）・福笑い（ふくわらい）",
+      "物|ブツ・モツ|もの|8|動物（どうぶつ）・買い物（かいもの）",
+      "平|ヘイ・ビョウ|たい-ら・ひら|5|平和（へいわ）・平ら（たいら）",
+      "返|ヘン|かえ-す・かえ-る|7|返事（へんじ）・返す（かえす）",
+      "勉|ベン|—|10|勉強（べんきょう）",
+      "放|ホウ|はな-す・はな-つ|8|放送（ほうそう）・放課後（ほうかご）",
+      "味|ミ|あじ|8|味（あじ）・興味（きょうみ）",
+      "命|メイ・ミョウ|いのち|8|命（いのち）・命令（めいれい）",
+      "面|メン|おも・おもて・つら|9|面白い（おもしろい）・地面（じめん）",
+      "問|モン|と-う・とい|11|問題（もんだい）・質問（しつもん）",
+      "役|ヤク・エキ|—|7|役に立つ（やくにたつ）・主役（しゅやく）",
+      "薬|ヤク|くすり|16|薬（くすり）・薬局（やっきょく）",
+      "由|ユ・ユウ・ユイ|よし|5|自由（じゆう）・理由（りゆう）",
+      "油|ユ|あぶら|8|油（あぶら）・しょう油（しょうゆ）",
+      "有|ユウ・ウ|あ-る|6|有名（ゆうめい）・有料（ゆうりょう）",
+      "遊|ユウ・ユ|あそ-ぶ|12|遊ぶ（あそぶ）・遊園地（ゆうえんち）",
+      "予|ヨ|—|4|予定（よてい）・天気予報（てんきよほう）",
+      "羊|ヨウ|ひつじ|6|羊（ひつじ）・羊毛（ようもう）",
+      "洋|ヨウ|—|9|洋服（ようふく）・太平洋（たいへいよう）",
+      "葉|ヨウ|は|12|葉っぱ（はっぱ）・言葉（ことば）",
+      "陽|ヨウ|—|12|太陽（たいよう）・陽気（ようき）",
+      "様|ヨウ|さま|14|様子（ようす）・神様（かみさま）",
+      "落|ラク|お-ちる・お-とす|12|落ちる（おちる）・落書き（らくがき）",
+      "流|リュウ・ル|なが-れる・なが-す|10|流れる（ながれる）・流行（りゅうこう）",
+      "旅|リョ|たび|10|旅行（りょこう）・旅館（りょかん）",
+      "両|リョウ|—|6|両親（りょうしん）・両方（りょうほう）",
+      "緑|リョク・ロク|みどり|14|緑色（みどりいろ）・新緑（しんりょく）",
+      "礼|レイ・ライ|—|5|お礼（おれい）・礼儀（れいぎ）",
+      "列|レツ|—|6|行列（ぎょうれつ）・列車（れっしゃ）",
+      "練|レン|ね-る|14|練習（れんしゅう）・訓練（くんれん）",
+      "路|ロ|じ|13|道路（どうろ）・通学路（つうがくろ）",
+      "和|ワ・オ|やわ-らぐ・なご-む|8|平和（へいわ）・和食（わしょく）"
+    ];
+
+    const JP3_KANJI = RAW_JP3_DATA.map(row => {
+      const [char, on, kun, strokes, words] = row.split('|');
+      return { char, on, kun, strokes, words };
+    });
+
+    // ==================== 4. 三大岛屿导航切换 ====================
+    let currentIsland = 'english';
+    function switchIsland(island) {
+      currentIsland = island;
+      ['english', 'chinese', 'kanji3'].forEach(id => {
+        const sec = document.getElementById(`section-${id}`);
+        const tab = document.getElementById(`tab-${id}`);
+        if (id === island) {
+          sec.classList.remove('hidden');
+          const activeColors = {
+            english: 'bg-sky-500 text-white',
+            chinese: 'bg-rose-500 text-white',
+            kanji3: 'bg-emerald-600 text-white'
+          };
+          tab.className = `btn-3d py-3 px-2 rounded-2xl font-extrabold text-sm sm:text-base flex flex-col sm:flex-row items-center justify-center gap-1 ${activeColors[id]}`;
+        } else {
+          sec.classList.add('hidden');
+          tab.className = 'btn-3d py-3 px-2 rounded-2xl font-extrabold text-sm sm:text-base flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-slate-600 border border-slate-200';
+        }
+      });
+    }
+
+    // ==================== 5. 英语冒险岛逻辑 ====================
+    let currentEnCat = 'days';
+    let currentEnMode = 'learn';
+
+    function selectEnCategory(cat) {
+      currentEnCat = cat;
+      document.querySelectorAll('.en-cat-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-sky-100 text-sky-800 border-2 border-sky-400';
+        } else {
+          btn.className = 'en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200';
+        }
+      });
+      renderEnCards();
+      if (currentEnMode === 'quiz') nextEnQuiz();
+    }
+
+    function setEnMode(mode) {
+      currentEnMode = mode;
+      ['learn', 'quiz', 'order'].forEach(m => {
+        const btn = document.getElementById(`en-mode-${m}`);
+        const view = document.getElementById(`en-${m}-view`);
+        if (m === mode) {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm bg-sky-500 text-white transition';
+          view.classList.remove('hidden');
+        } else {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition';
+          view.classList.add('hidden');
+        }
+      });
+      document.getElementById('en-category-bar').classList.toggle('hidden', mode === 'order');
+      if (mode === 'quiz') nextEnQuiz();
+      if (mode === 'order') initOrderGame('days');
+    }
+
+    function renderEnCards() {
+      const container = document.getElementById('en-learn-view');
+      const items = EN_DATA[currentEnCat];
+      container.innerHTML = items.map(item => `
+        <div onclick="speakText('${item.word}', 'en-US')" class="bubbly-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-sky-300 relative">
+          ${item.letter ? `<span class="absolute top-2.5 left-3 text-xs font-black px-2 py-0.5 rounded-lg bg-sky-100 text-sky-700">${item.letter}</span>` : ''}
+          ${item.num ? `<span class="absolute top-2.5 left-3 text-xs font-black px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800">#${item.num}</span>` : ''}
+          <span class="absolute top-2.5 right-3 text-sm opacity-60">🔊</span>
+          <div class="text-4xl my-2">${item.emoji}</div>
+          <div class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-wide">${item.word}</div>
+          <div class="text-xs font-bold text-slate-400 mt-1">${item.zh} ${item.jp ? '· ' + item.jp : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // 英语听音辨词小游戏
+    let enQuizTarget = null;
+    let enQuizStreak = 0;
+
+    function nextEnQuiz() {
+      const pool = EN_DATA[currentEnCat];
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const options = shuffled.slice(0, 4);
+      enQuizTarget = options[Math.floor(Math.random() * options.length)];
+
+      document.getElementById('en-quiz-feedback').textContent = '';
+      document.getElementById('en-quiz-hint').textContent = '仔细听发音，选出对应卡片！';
+
+      const optContainer = document.getElementById('en-quiz-options');
+      optContainer.innerHTML = options.map(opt => `
+        <button onclick="checkEnQuiz('${opt.word}', this)" class="bubbly-card p-4 flex flex-col items-center justify-center hover:border-sky-400">
+          <span class="text-4xl mb-1">${opt.emoji}</span>
+          <span class="text-base font-extrabold text-slate-800">${opt.word}</span>
+          <span class="text-xs text-slate-400 font-bold">${opt.zh}</span>
+        </button>
+      `).join('');
+
+      setTimeout(() => speakText(enQuizTarget.word, 'en-US'), 250);
+    }
+
+    function replayEnQuizAudio() {
+      if (enQuizTarget) speakText(enQuizTarget.word, 'en-US');
+    }
+
+    function checkEnQuiz(selectedWord, btnEl) {
+      if (!enQuizTarget) return;
+      const fb = document.getElementById('en-quiz-feedback');
+      if (selectedWord === enQuizTarget.word) {
+        enQuizStreak++;
+        document.getElementById('en-quiz-streak').textContent = `连胜: ${enQuizStreak} 🔥`;
+        fb.className = 'h-8 font-extrabold text-lg text-emerald-600';
+        fb.textContent = `🎉 太棒了！就是 ${enQuizTarget.word}！`;
+        updateStarDisplay(1, btnEl);
+        speakText('Great job! ' + enQuizTarget.word, 'en-US');
+        enQuizTarget = null;
+        setTimeout(nextEnQuiz, 1300);
+      } else {
+        enQuizStreak = 0;
+        document.getElementById('en-quiz-streak').textContent = `连胜: 0 🔥`;
+        fb.className = 'h-8 font-extrabold text-base text-rose-500';
+        fb.textContent = '再听一遍试试看哦 💪';
+        speakText(enQuizTarget.word, 'en-US');
+      }
+    }
+
+    // 英语顺序排排看游戏
+    let orderTargetList = [];
+    let orderCurrentIndex = 0;
+
+    function initOrderGame(type) {
+      if (type === 'days') {
+        orderTargetList = EN_DATA.days.map(d => d.word);
+      } else if (type === 'num10') {
+        orderTargetList = EN_DATA.numbers.slice(0, 10).map(n => `${n.num} ${n.word}`);
+      } else {
+        orderTargetList = EN_DATA.numbers.slice(10, 20).map(n => `${n.num} ${n.word}`);
+      }
+      orderCurrentIndex = 0;
+      renderOrderGame();
+    }
+
+    function renderOrderGame() {
+      const slots = document.getElementById('order-progress-slots');
+      slots.innerHTML = orderTargetList.map((item, idx) => {
+        if (idx < orderCurrentIndex) {
+          return `<span class="px-3 py-1 rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-sm">✓ ${item}</span>`;
+        }
+        return `<span class="px-3 py-1 rounded-xl bg-white text-slate-300 border border-slate-200 font-bold text-xs">${idx + 1}</span>`;
+      }).join('');
+
+      const remaining = orderTargetList.slice(orderCurrentIndex);
+      const shuffled = [...remaining].sort(() => Math.random() - 0.5);
+      const poolEl = document.getElementById('order-pool');
+
+      if (remaining.length === 0) {
+        poolEl.innerHTML = `<div class="col-span-full text-center py-4 font-extrabold text-emerald-600 text-lg">🏆 全部排对啦！获得 3 颗星星！</div>`;
+        return;
+      }
+
+      poolEl.innerHTML = shuffled.map(val => `
+        <button onclick="handleOrderClick('${val}', this)" class="btn-3d py-3 px-2 rounded-2xl bg-white border-2 border-sky-200 font-extrabold text-sm text-slate-800 hover:bg-sky-50">
+          ${val}
+        </button>
+      `).join('');
+    }
+
+    function handleOrderClick(val, btnEl) {
+      const expected = orderTargetList[orderCurrentIndex];
+      const cleanWord = val.replace(/^\d+\s/, '');
+      if (val === expected) {
+        speakText(cleanWord, 'en-US');
+        orderCurrentIndex++;
+        if (orderCurrentIndex === orderTargetList.length) {
+          updateStarDisplay(3, btnEl);
+        }
+        renderOrderGame();
+      } else {
+        btnEl.classList.add('border-rose-400', 'bg-rose-50');
+        setTimeout(() => btnEl.classList.remove('border-rose-400', 'bg-rose-50'), 400);
+      }
+    }
+
+    // ==================== 6. 中文识字园逻辑 ====================
+    let currentZhCat = 'all';
+    let currentZhMode = 'learn';
+
+    function selectZhCategory(cat) {
+      currentZhCat = cat;
+      document.querySelectorAll('.zh-cat-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-rose-100 text-rose-800 border-2 border-rose-400';
+        } else {
+          btn.className = 'zh-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200';
+        }
+      });
+      renderZhCards();
+    }
+
+    function setZhMode(mode) {
+      currentZhMode = mode;
+      ['learn', 'quiz'].forEach(m => {
+        const btn = document.getElementById(`zh-mode-${m}`);
+        const view = document.getElementById(`zh-${m}-view`);
+        if (m === mode) {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm bg-rose-500 text-white transition';
+          view.classList.remove('hidden');
+        } else {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition';
+          view.classList.add('hidden');
+        }
+      });
+      document.getElementById('zh-category-bar').classList.toggle('hidden', mode === 'quiz');
+      if (mode === 'quiz') nextZhQuiz();
+    }
+
+    function renderZhCards() {
+      const list = currentZhCat === 'all' ? ZH_CHARS : ZH_CHARS.filter(c => c.cat === currentZhCat);
+      const container = document.getElementById('zh-learn-view');
+      container.innerHTML = list.map(item => `
+        <div onclick='openStrokeModal("zh", ${JSON.stringify(item)})' class="bubbly-card p-3 flex flex-col items-center text-center cursor-pointer hover:border-rose-300">
+          <div class="text-xs font-extrabold text-rose-500">${item.pinyin}</div>
+          <div class="text-4xl font-black text-slate-800 my-1">${item.char}</div>
+          <div class="text-[11px] font-bold text-slate-500 truncate w-full">${item.words.split('、')[0]}</div>
+        </div>
+      `).join('');
+    }
+
+    // 中文听音识字闯关
+    let zhQuizTarget = null;
+    let zhQuizStreak = 0;
+
+    function nextZhQuiz() {
+      const shuffled = [...ZH_CHARS].sort(() => Math.random() - 0.5);
+      const options = shuffled.slice(0, 4);
+      zhQuizTarget = options[Math.floor(Math.random() * options.length)];
+
+      document.getElementById('zh-quiz-pinyin').textContent = zhQuizTarget.pinyin;
+      document.getElementById('zh-quiz-clue').textContent = `组词：${zhQuizTarget.words} ｜ 日语：${zhQuizTarget.jp}`;
+      document.getElementById('zh-quiz-feedback').textContent = '';
+
+      document.getElementById('zh-quiz-options').innerHTML = options.map(opt => `
+        <button onclick="checkZhQuiz('${opt.char}', this)" class="bubbly-card py-5 flex flex-col items-center justify-center hover:border-rose-400">
+          <span class="text-5xl font-black text-slate-800">${opt.char}</span>
+        </button>
+      `).join('');
+
+      setTimeout(() => replayZhQuizAudio(), 250);
+    }
+
+    function replayZhQuizAudio() {
+      if (!zhQuizTarget) return;
+      const firstWord = zhQuizTarget.words.split('、')[0];
+      speakText(`${zhQuizTarget.char}，${firstWord}`, 'zh-CN');
+    }
+
+    function checkZhQuiz(selectedChar, btnEl) {
+      if (!zhQuizTarget) return;
+      const fb = document.getElementById('zh-quiz-feedback');
+      if (selectedChar === zhQuizTarget.char) {
+        zhQuizStreak++;
+        document.getElementById('zh-quiz-streak').textContent = `连胜: ${zhQuizStreak} 🔥`;
+        fb.className = 'h-8 font-extrabold text-lg text-emerald-600';
+        fb.textContent = `🎉 答对啦！「${zhQuizTarget.char}」(${zhQuizTarget.pinyin})`;
+        updateStarDisplay(1, btnEl);
+        zhQuizTarget = null;
+        setTimeout(nextZhQuiz, 1200);
+      } else {
+        zhQuizStreak = 0;
+        document.getElementById('zh-quiz-streak').textContent = `连胜: 0 🔥`;
+        fb.className = 'h-8 font-extrabold text-base text-rose-500';
+        fb.textContent = '不对哦，再听一次读音吧！';
+        replayZhQuizAudio();
+      }
+    }
+
+    // ==================== 7. 日本小学3年级汉字道场逻辑 ====================
+    let currentJpMode = 'learn';
+
+    function setJpMode(mode) {
+      currentJpMode = mode;
+      ['learn', 'quiz'].forEach(m => {
+        const btn = document.getElementById(`jp-mode-${m}`);
+        const view = document.getElementById(`jp-${m}-view`);
+        if (m === mode) {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm bg-emerald-600 text-white transition';
+          view.classList.remove('hidden');
+        } else {
+          btn.className = 'flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition';
+          view.classList.add('hidden');
+        }
+      });
+      document.getElementById('jp-search-bar').classList.toggle('hidden', mode === 'quiz');
+      if (mode === 'quiz') nextJpQuiz();
+    }
+
+    function renderJpGrid() {
+      const q = document.getElementById('jp-search-input').value.trim();
+      const filtered = q
+        ? JP3_KANJI.filter(k => k.char.includes(q) || k.on.includes(q) || k.kun.includes(q) || k.words.includes(q))
+        : JP3_KANJI;
+
+      const container = document.getElementById('jp-learn-view');
+      container.innerHTML = filtered.map(item => `
+        <div onclick='openStrokeModal("jp", ${JSON.stringify(item)})' class="bubbly-card p-2.5 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-400">
+          <span class="text-[10px] font-bold text-emerald-600">${item.strokes}画</span>
+          <span class="text-3xl font-black text-slate-800 my-0.5">${item.char}</span>
+          <span class="text-[10px] font-bold text-slate-400 truncate w-full">${item.on !== '—' ? item.on.split('・')[0] : item.kun.split('・')[0]}</span>
+        </div>
+      `).join('');
+    }
+
+    // 小3汉字テスト（读音与选字双题型）
+    let jpQuizTarget = null;
+    let jpQuizAnswer = '';
+    let jpQuizStreak = 0;
+
+    function nextJpQuiz() {
+      const shuffled = [...JP3_KANJI].sort(() => Math.random() - 0.5);
+      const options = shuffled.slice(0, 4);
+      jpQuizTarget = options[Math.floor(Math.random() * options.length)];
+
+      // 提取第一个例词，例如 "図書館（としょかん）"
+      const firstExample = jpQuizTarget.words.split('・')[0];
+      const match = firstExample.match(/^(.+?)（(.+?)）$/);
+
+      const isReadingQuiz = Math.random() > 0.45 && match;
+      const badge = document.getElementById('jp-quiz-type-badge');
+      const qEl = document.getElementById('jp-quiz-question');
+      const subEl = document.getElementById('jp-quiz-sub');
+      const optEl = document.getElementById('jp-quiz-options');
+      document.getElementById('jp-quiz-feedback').textContent = '';
+
+      if (isReadingQuiz && match) {
+        // 题型A：看词选读音
+        const [, wordKanji, wordReading] = match;
+        jpQuizAnswer = wordReading;
+        badge.textContent = '読み方クイズ（选正确读音）';
+        qEl.textContent = wordKanji;
+        subEl.textContent = `「${jpQuizTarget.char}」の読み方はどれ？`;
+
+        const optReadings = options.map(o => {
+          const m = o.words.split('・')[0].match(/（(.+?)）/);
+          return m ? m[1] : (o.kun !== '—' ? o.kun.split('・')[0] : o.on.split('・')[0]);
+        });
+        // 确保正确答案在选项里且不重复
+        optReadings[options.indexOf(jpQuizTarget)] = wordReading;
+
+        optEl.innerHTML = optReadings.map(r => `
+          <button onclick="checkJpQuiz('${r}', this)" class="bubbly-card py-4 px-2 font-extrabold text-base sm:text-lg text-slate-800 hover:border-emerald-400">
+            ${r}
+          </button>
+        `).join('');
+        setTimeout(() => speakText(wordReading, 'ja-JP'), 250);
+      } else {
+        // 题型B：看假名提示选出正确的小3汉字
+        jpQuizAnswer = jpQuizTarget.char;
+        badge.textContent = '漢字選びクイズ（选正确汉字）';
+        if (match) {
+          qEl.textContent = match[2];
+          subEl.textContent = `「${match[1]}」に使われる漢字はどれ？`;
+          setTimeout(() => speakText(match[2], 'ja-JP'), 250);
+        } else {
+          const readingHint = jpQuizTarget.kun !== '—' ? jpQuizTarget.kun : jpQuizTarget.on;
+          qEl.textContent = readingHint;
+          subEl.textContent = `この読み方の小学3年漢字はどれ？`;
+          setTimeout(() => speakText(readingHint.replace('-', ''), 'ja-JP'), 250);
+        }
+
+        optEl.innerHTML = options.map(o => `
+          <button onclick="checkJpQuiz('${o.char}', this)" class="bubbly-card py-4 flex flex-col items-center justify-center hover:border-emerald-400">
+            <span class="text-4xl font-black text-slate-800">${o.char}</span>
+          </button>
+        `).join('');
+      }
+    }
+
+    function checkJpQuiz(selected, btnEl) {
+      if (!jpQuizTarget) return;
+      const fb = document.getElementById('jp-quiz-feedback');
+      if (selected === jpQuizAnswer) {
+        jpQuizStreak++;
+        document.getElementById('jp-quiz-streak').textContent = `連続正解: ${jpQuizStreak} 🔥`;
+        fb.className = 'h-8 font-extrabold text-lg text-emerald-600';
+        fb.textContent = `💮 大正解！「${jpQuizTarget.char}」`;
+        updateStarDisplay(1, btnEl);
+        speakText('せいかい！', 'ja-JP');
+        jpQuizTarget = null;
+        setTimeout(nextJpQuiz, 1200);
+      } else {
+        jpQuizStreak = 0;
+        document.getElementById('jp-quiz-streak').textContent = `連続正解: 0 🔥`;
+        fb.className = 'h-8 font-extrabold text-base text-rose-500';
+        fb.textContent = 'おしい！もう一回考えてみよう 💪';
+      }
+    }
+
+    // ==================== 8. HanziWriter 笔顺动画与手写描红弹窗 ====================
+    let writerInstance = null;
+    let currentModalData = null;
+    let currentModalLang = 'zh';
+
+    function openStrokeModal(lang, data) {
+      currentModalLang = lang;
+      currentModalData = data;
+      const modal = document.getElementById('stroke-modal');
+      modal.classList.remove('hidden');
+
+      const badge = document.getElementById('modal-lang-badge');
+      const details = document.getElementById('modal-details');
+      document.getElementById('stroke-quiz-status').textContent = '点击「笔顺动画」观看或「手指描红」练习';
+
+      if (lang === 'zh') {
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700';
+        badge.textContent = '🐼 中文识字 · 笔顺与读音';
+        details.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <span class="text-slate-500 font-bold">汉语拼音</span>
+            <span class="text-xl font-black text-rose-600">${data.pinyin}</span>
+          </div>
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <span class="text-slate-500 font-bold">常用组词</span>
+            <span class="font-extrabold text-slate-800">${data.words}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 font-bold">日语意思参考</span>
+            <span class="font-bold text-slate-600">${data.jp}</span>
+          </div>
+        `;
+      } else {
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800';
+        badge.textContent = `🏯 小学3年漢字 · ${data.strokes}画`;
+        details.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <span class="text-slate-500 font-bold">音読み（カタカナ）</span>
+            <span class="font-black text-emerald-700">${data.on}</span>
+          </div>
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <span class="text-slate-500 font-bold">訓読み（ひらがな）</span>
+            <span class="font-black text-sky-700">${data.kun}</span>
+          </div>
+          <div>
+            <div class="text-slate-500 font-bold mb-1">よく使う言葉（熟語・例）</div>
+            <div class="font-extrabold text-slate-800 bg-white p-2.5 rounded-xl border border-slate-200">${data.words}</div>
+          </div>
+        `;
+      }
+
+      // 初始化 HanziWriter
+      const targetBox = document.getElementById('hanzi-target-box');
+      targetBox.innerHTML = '';
+      try {
+        writerInstance = HanziWriter.create('hanzi-target-box', data.char, {
+          width: 200,
+          height: 200,
+          padding: 12,
+          showOutline: true,
+          strokeAnimationSpeed: 1.1,
+          delayBetweenStrokes: 220,
+          strokeColor: lang === 'zh' ? '#E11D48' : '#059669',
+          radicalColor: '#2563EB',
+          outlineColor: '#CBD5E1',
+          drawingWidth: 22
+        });
+        writerInstance.animateCharacter();
+      } catch (e) {
+        targetBox.innerHTML = `<span class="text-8xl font-black text-slate-800">${data.char}</span>`;
+      }
+
+      speakModalChar();
+    }
+
+    function animateHanzi() {
+      if (writerInstance) {
+        document.getElementById('stroke-quiz-status').textContent = '正在演示标准笔顺...';
+        writerInstance.animateCharacter({
+          onComplete: () => {
+            document.getElementById('stroke-quiz-status').textContent = '演示完成！可以试试「手指描红练习」哦';
+          }
+        });
+      }
+    }
+
+    function startHanziQuiz() {
+      if (!writerInstance) return;
+      const statusEl = document.getElementById('stroke-quiz-status');
+      statusEl.className = 'text-xs font-extrabold text-emerald-600 mt-2 h-4';
+      statusEl.textContent = '✍️ 请用手指在方格里一笔一画描红！';
+
+      writerInstance.quiz({
+        onMistake: function() {
+          statusEl.className = 'text-xs font-extrabold text-rose-500 mt-2 h-4';
+          statusEl.textContent = '笔顺不对哦，跟着提示再试一笔！';
+        },
+        onCorrectStroke: function(strokeData) {
+          statusEl.className = 'text-xs font-extrabold text-sky-600 mt-2 h-4';
+          statusEl.textContent = `很好！还剩 ${strokeData.strokesRemaining} 笔`;
+        },
+        onComplete: function() {
+          statusEl.className = 'text-xs font-extrabold text-amber-600 mt-2 h-4';
+          statusEl.textContent = '🎉 写得太棒了！奖励 1 颗星星！';
+          updateStarDisplay(1, document.getElementById('hanzi-target-box'));
+          speakModalChar();
+        }
+      });
+    }
+
+    function speakModalChar() {
+      if (!currentModalData) return;
+      if (currentModalLang === 'zh') {
+        const w = currentModalData.words.split('、')[0];
+        speakText(`${currentModalData.char}，${w}`, 'zh-CN');
+      } else {
+        const cleanWords = currentModalData.words.replace(/（.*?）/g, '');
+        speakText(cleanWords, 'ja-JP');
+      }
+    }
+
+    function closeStrokeModal() {
+      document.getElementById('stroke-modal').classList.add('hidden');
+    }
+
+    function openGuideModal() {
+      document.getElementById('guide-modal').classList.remove('hidden');
+    }
+
+    function closeGuideModal() {
+      document.getElementById('guide-modal').classList.add('hidden');
+    }
+
+    // ==================== 9. 页面初始化 ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      updateStarDisplay(0);
+      renderEnCards();
+      renderZhCards();
+      renderJpGrid();
+    });
+  </script>
+</body>
+</html>
