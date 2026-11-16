@@ -15,8 +15,10 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Hanzi Writer 用于动态笔顺动画与手指描红 -->
+  <!-- Hanzi Writer 用于动态笔顺动画与手指描红（多 CDN 兜底，防止单一源被墙导致功能失效） -->
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script>if (!window.HanziWriter) { document.write('<script src="https://fastly.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"><\/script>'); }</script>
+  <script>if (!window.HanziWriter) { document.write('<script src="https://unpkg.com/hanzi-writer@3.5/dist/hanzi-writer.min.js"><\/script>'); }</script>
   <!-- Google Fonts: 圆润童趣字体 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,6 +63,10 @@
         linear-gradient(to bottom, transparent 49.5%, #FCA5A5 49.5%, #FCA5A5 50.5%, transparent 50.5%);
       border: 3px solid #F87171;
       border-radius: 1.25rem;
+    }
+    /* ============ 连连看配对成功缩小动画 ============ */
+    .match-shrink {
+      animation: popIn 0.25s ease;
     }
     @keyframes popIn {
       0% { transform: scale(0.85); opacity: 0; }
@@ -144,6 +150,12 @@
         <button onclick="setEnMode('order')" id="en-mode-order" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
           🧩 顺序排排看
         </button>
+        <button onclick="setEnMode('guess')" id="en-mode-guess" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🖼️ 看图猜词
+        </button>
+        <button onclick="setEnMode('memory')" id="en-mode-memory" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🧲 连连看
+        </button>
       </div>
 
       <!-- 分类选择 -->
@@ -153,6 +165,9 @@
         <button onclick="selectEnCategory('animals')" data-cat="animals" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🐶 动物与自然</button>
         <button onclick="selectEnCategory('az')" data-cat="az" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🅰️ 26个字母词</button>
         <button onclick="selectEnCategory('sight')" data-cat="sight" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🇺🇸 启蒙高频词</button>
+        <button onclick="selectEnCategory('food')" data-cat="food" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🍔 美味食物</button>
+        <button onclick="selectEnCategory('colors')" data-cat="colors" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🎨 缤纷颜色</button>
+        <button onclick="selectEnCategory('body')" data-cat="body" class="en-cat-btn shrink-0 px-4 py-2 rounded-full font-bold text-sm bg-white text-slate-600 border-2 border-slate-200">🧒 身体部位</button>
       </div>
 
       <!-- 英语学习卡片网格 -->
@@ -193,6 +208,41 @@
         <!-- 打乱的按钮池 -->
         <div id="order-pool" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2"></div>
       </div>
+
+      <!-- 英语看图猜词游戏 -->
+      <div id="en-guess-view" class="hidden bubbly-card p-5 text-center space-y-5">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+          <span>看图片，猜猜用英语怎么说？</span>
+          <span id="en-guess-streak" class="text-amber-500">连胜: 0 🔥</span>
+        </div>
+        <div class="bg-sky-50 rounded-2xl p-6 border-2 border-sky-100">
+          <div id="en-guess-emoji" class="text-7xl py-2">🍎</div>
+          <p class="text-xs text-slate-500 font-bold">What is this? 选出正确的英文单词！</p>
+        </div>
+        <div id="en-guess-options" class="grid grid-cols-2 gap-3"></div>
+        <div id="en-guess-feedback" class="h-8 font-extrabold text-lg"></div>
+      </div>
+
+      <!-- 英语单词连连看游戏 -->
+      <div id="en-memory-view" class="hidden bubbly-card p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="font-extrabold text-base text-slate-800">🧲 单词连连看</h3>
+            <p class="text-xs text-slate-500">点左边的英文单词，再点右边它的中文・日文意思！</p>
+          </div>
+          <span id="en-memory-pairs" class="text-xs font-bold text-sky-600 bg-sky-50 border border-sky-200 px-3 py-1 rounded-full">已连对: 0/6</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <div class="text-[11px] font-extrabold text-sky-600 text-center mb-1.5">🇺🇸 英文</div>
+            <div id="match-left" class="space-y-2"></div>
+          </div>
+          <div>
+            <div class="text-[11px] font-extrabold text-rose-600 text-center mb-1.5">🇨🇳🇯🇵 中文 · 日文</div>
+            <div id="match-right" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ==================== 模块二：中文识字园 ==================== -->
@@ -203,6 +253,9 @@
         </button>
         <button onclick="setZhMode('quiz')" id="zh-mode-quiz" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
           🎯 听音识字闯关
+        </button>
+        <button onclick="setZhMode('py')" id="zh-mode-py" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
+          🔡 拼音挑战
         </button>
       </div>
 
@@ -235,6 +288,20 @@
         <div id="zh-quiz-options" class="grid grid-cols-2 gap-3"></div>
         <div id="zh-quiz-feedback" class="h-8 font-extrabold text-lg"></div>
       </div>
+
+      <!-- 中文看字选拼音挑战 -->
+      <div id="zh-py-view" class="hidden bubbly-card p-5 text-center space-y-5">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+          <span>看汉字，选出正确的拼音！</span>
+          <span id="zh-py-streak" class="text-rose-500">连胜: 0 🔥</span>
+        </div>
+        <div class="bg-amber-50 rounded-2xl p-5 border-2 border-amber-200">
+          <div id="zh-py-char" class="text-6xl font-black text-slate-800 py-2">天</div>
+          <p class="text-xs text-slate-500 font-bold">这个汉字的拼音是哪一个？</p>
+        </div>
+        <div id="zh-py-options" class="grid grid-cols-2 gap-3"></div>
+        <div id="zh-py-feedback" class="h-8 font-extrabold text-lg"></div>
+      </div>
     </section>
 
     <!-- ==================== 模块三：日本小学3年级汉字道场 ==================== -->
@@ -244,7 +311,7 @@
           📚 小3漢字一覧 (全200字)
         </button>
         <button onclick="setJpMode('quiz')" id="jp-mode-quiz" class="flex-1 py-2 rounded-xl font-bold text-sm text-slate-600 transition">
-          📝 漢字テスト (闯关)
+          📝 漢字テスト (漢検ふう)
         </button>
       </div>
 
@@ -367,13 +434,13 @@
     // 3.1 英语词库
     const EN_DATA = {
       days: [
-        { word: 'Sunday', jp: '日曜日', zh: '星期日', emoji: '☀️' },
-        { word: 'Monday', jp: '月曜日', zh: '星期一', emoji: '🌙' },
-        { word: 'Tuesday', jp: '火曜日', zh: '星期二', emoji: '🔥' },
-        { word: 'Wednesday', jp: '水曜日', zh: '星期三', emoji: '💧' },
-        { word: 'Thursday', jp: '木曜日', zh: '星期四', emoji: '🌳' },
-        { word: 'Friday', jp: '金曜日', zh: '星期五', emoji: '⭐' },
-        { word: 'Saturday', jp: '土曜日', zh: '星期六', emoji: '🪐' }
+        { word: 'Sunday', jp: '日曜日', zh: '星期日', emoji: '🛌' },
+        { word: 'Monday', jp: '月曜日', zh: '星期一', emoji: '🏫' },
+        { word: 'Tuesday', jp: '火曜日', zh: '星期二', emoji: '📖' },
+        { word: 'Wednesday', jp: '水曜日', zh: '星期三', emoji: '✏️' },
+        { word: 'Thursday', jp: '木曜日', zh: '星期四', emoji: '🎨' },
+        { word: 'Friday', jp: '金曜日', zh: '星期五', emoji: '⚽' },
+        { word: 'Saturday', jp: '土曜日', zh: '星期六', emoji: '🎡' }
       ],
       numbers: [
         { word: 'one', num: '1', zh: '一', emoji: '1️⃣' },
@@ -458,6 +525,44 @@
         { word: 'blue', jp: 'あお', zh: '蓝色', emoji: '🔵' },
         { word: 'big', jp: 'おおきい', zh: '大的', emoji: '🐘' },
         { word: 'small', jp: 'ちいさい', zh: '小的', emoji: '🐜' }
+      ],
+      food: [
+        { word: 'rice', jp: 'ごはん', zh: '米饭', emoji: '🍚' },
+        { word: 'bread', jp: 'パン', zh: '面包', emoji: '🍞' },
+        { word: 'noodles', jp: 'ラーメン', zh: '面条', emoji: '🍜' },
+        { word: 'egg', jp: 'たまご', zh: '鸡蛋', emoji: '🥚' },
+        { word: 'banana', jp: 'バナナ', zh: '香蕉', emoji: '🍌' },
+        { word: 'cake', jp: 'ケーキ', zh: '蛋糕', emoji: '🍰' },
+        { word: 'watermelon', jp: 'すいか', zh: '西瓜', emoji: '🍉' },
+        { word: 'grape', jp: 'ぶどう', zh: '葡萄', emoji: '🍇' },
+        { word: 'candy', jp: 'あめ', zh: '糖果', emoji: '🍬' },
+        { word: 'soup', jp: 'スープ', zh: '汤', emoji: '🍲' },
+        { word: 'hamburger', jp: 'ハンバーガー', zh: '汉堡', emoji: '🍔' },
+        { word: 'dumpling', jp: 'ギョーザ', zh: '饺子', emoji: '🥟' }
+      ],
+      colors: [
+        { word: 'red', jp: 'あか', zh: '红色', emoji: '🔴' },
+        { word: 'blue', jp: 'あお', zh: '蓝色', emoji: '🔵' },
+        { word: 'green', jp: 'みどり', zh: '绿色', emoji: '🟢' },
+        { word: 'yellow', jp: 'きいろ', zh: '黄色', emoji: '🟡' },
+        { word: 'orange', jp: 'オレンジ', zh: '橙色', emoji: '🟠' },
+        { word: 'purple', jp: 'むらさき', zh: '紫色', emoji: '🟣' },
+        { word: 'pink', jp: 'ピンク', zh: '粉色', emoji: '🌸' },
+        { word: 'black', jp: 'くろ', zh: '黑色', emoji: '⚫' },
+        { word: 'white', jp: 'しろ', zh: '白色', emoji: '⚪' },
+        { word: 'brown', jp: 'ちゃいろ', zh: '棕色', emoji: '🟤' }
+      ],
+      body: [
+        { word: 'eye', jp: 'め', zh: '眼睛', emoji: '👁️' },
+        { word: 'ear', jp: 'みみ', zh: '耳朵', emoji: '👂' },
+        { word: 'nose', jp: 'はな', zh: '鼻子', emoji: '👃' },
+        { word: 'mouth', jp: 'くち', zh: '嘴巴', emoji: '👄' },
+        { word: 'hand', jp: 'て', zh: '手', emoji: '✋' },
+        { word: 'foot', jp: 'あし', zh: '脚', emoji: '🦶' },
+        { word: 'arm', jp: 'うで', zh: '胳膊', emoji: '💪' },
+        { word: 'leg', jp: 'あし（脚）', zh: '腿', emoji: '🦵' },
+        { word: 'hair', jp: 'かみのけ', zh: '头发', emoji: '💇' },
+        { word: 'tooth', jp: 'は', zh: '牙齿', emoji: '🦷' }
       ]
     };
 
@@ -781,11 +886,13 @@
       });
       renderEnCards();
       if (currentEnMode === 'quiz') nextEnQuiz();
+      if (currentEnMode === 'guess') nextEnGuess();
+      if (currentEnMode === 'memory') initMemoryGame();
     }
 
     function setEnMode(mode) {
       currentEnMode = mode;
-      ['learn', 'quiz', 'order'].forEach(m => {
+      ['learn', 'quiz', 'order', 'guess', 'memory'].forEach(m => {
         const btn = document.getElementById(`en-mode-${m}`);
         const view = document.getElementById(`en-${m}-view`);
         if (m === mode) {
@@ -798,6 +905,8 @@
       });
       document.getElementById('en-category-bar').classList.toggle('hidden', mode === 'order');
       if (mode === 'quiz') nextEnQuiz();
+      if (mode === 'guess') nextEnGuess();
+      if (mode === 'memory') initMemoryGame();
       if (mode === 'order') initOrderGame('days');
     }
 
@@ -827,16 +936,29 @@
       enQuizTarget = options[Math.floor(Math.random() * options.length)];
 
       document.getElementById('en-quiz-feedback').textContent = '';
-      document.getElementById('en-quiz-hint').textContent = '仔细听发音，选出对应卡片！';
-
+      const hintEl = document.getElementById('en-quiz-hint');
       const optContainer = document.getElementById('en-quiz-options');
-      optContainer.innerHTML = options.map(opt => `
-        <button onclick="checkEnQuiz('${opt.word}', this)" class="bubbly-card p-4 flex flex-col items-center justify-center hover:border-sky-400">
-          <span class="text-4xl mb-1">${opt.emoji}</span>
-          <span class="text-base font-extrabold text-slate-800">${opt.word}</span>
-          <span class="text-xs text-slate-400 font-bold">${opt.zh}</span>
-        </button>
-      `).join('');
+
+      if (currentEnCat === 'days') {
+        // 星期类：不用图片，直接显示中文·日文词，让孩子选对应的英文单词
+        hintEl.className = 'mt-3 text-2xl font-black text-slate-800';
+        hintEl.textContent = `${enQuizTarget.zh} · ${enQuizTarget.jp}`;
+        optContainer.innerHTML = options.map(opt => `
+          <button onclick="checkEnQuiz('${opt.word}', this)" class="bubbly-card py-4 font-extrabold text-base sm:text-lg text-slate-800 hover:border-sky-400">
+            ${opt.word}
+          </button>
+        `).join('');
+      } else {
+        hintEl.className = 'mt-3 text-sm text-slate-500 font-medium';
+        hintEl.textContent = '仔细听发音，选出对应卡片！';
+        optContainer.innerHTML = options.map(opt => `
+          <button onclick="checkEnQuiz('${opt.word}', this)" class="bubbly-card p-4 flex flex-col items-center justify-center hover:border-sky-400">
+            <span class="text-4xl mb-1">${opt.emoji}</span>
+            <span class="text-base font-extrabold text-slate-800">${opt.word}</span>
+            <span class="text-xs text-slate-400 font-bold">${opt.zh}</span>
+          </button>
+        `).join('');
+      }
 
       setTimeout(() => speakText(enQuizTarget.word, 'en-US'), 250);
     }
@@ -923,6 +1045,135 @@
       }
     }
 
+    // 英语看图猜词游戏
+    let enGuessTarget = null;
+    let enGuessStreak = 0;
+
+    function nextEnGuess() {
+      const pool = EN_DATA[currentEnCat];
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const options = shuffled.slice(0, 4);
+      enGuessTarget = options[Math.floor(Math.random() * options.length)];
+
+      document.getElementById('en-guess-emoji').textContent = enGuessTarget.emoji;
+      document.getElementById('en-guess-feedback').textContent = '';
+
+      document.getElementById('en-guess-options').innerHTML = options.map(opt => `
+        <button onclick="checkEnGuess('${opt.word}', this)" class="bubbly-card py-4 font-extrabold text-base sm:text-lg text-slate-800 hover:border-sky-400">
+          ${opt.word}
+        </button>
+      `).join('');
+    }
+
+    function checkEnGuess(selectedWord, btnEl) {
+      if (!enGuessTarget) return;
+      const fb = document.getElementById('en-guess-feedback');
+      if (selectedWord === enGuessTarget.word) {
+        enGuessStreak++;
+        document.getElementById('en-guess-streak').textContent = `连胜: ${enGuessStreak} 🔥`;
+        fb.className = 'h-8 font-extrabold text-lg text-emerald-600';
+        fb.textContent = `🎉 Bingo！${enGuessTarget.emoji} ${enGuessTarget.word}！`;
+        updateStarDisplay(1, btnEl);
+        speakText(`Yes! This is ${enGuessTarget.word}`, 'en-US');
+        enGuessTarget = null;
+        setTimeout(nextEnGuess, 1300);
+      } else {
+        enGuessStreak = 0;
+        document.getElementById('en-guess-streak').textContent = `连胜: 0 🔥`;
+        fb.className = 'h-8 font-extrabold text-base text-rose-500';
+        fb.textContent = '不对哦，再想想看 💪';
+        speakText(enGuessTarget.word, 'en-US');
+      }
+    }
+
+    // 英语单词连连看（左：英文 / 右：中文・日文）
+    let matchLeft = [];
+    let matchRight = [];
+    let matchSel = null; // { side: 'left'|'right', idx }
+    let matchDone = 0;
+    let matchLock = false;
+
+    function initMemoryGame() {
+      const pool = [...EN_DATA[currentEnCat]].sort(() => Math.random() - 0.5).slice(0, 6);
+      matchLeft = pool.map((item, i) => ({ pairId: i, text: item.word, emoji: item.emoji, matched: false }));
+      matchRight = pool.map((item, i) => ({ pairId: i, text: `${item.zh} · ${item.jp}`, matched: false }));
+      matchLeft.sort(() => Math.random() - 0.5);
+      matchRight.sort(() => Math.random() - 0.5);
+      matchSel = null;
+      matchDone = 0;
+      matchLock = false;
+      renderMatch();
+    }
+
+    function matchCardHtml(card, side, idx) {
+      const selected = matchSel && matchSel.side === side && matchSel.idx === idx;
+      if (card.matched) {
+        // 连对成功：卡片缩小成一个小对勾标签
+        return `<div class="match-shrink rounded-full bg-emerald-100 border border-emerald-300 px-2 py-1 text-center">
+          <div class="text-[10px] font-extrabold text-emerald-600 truncate w-full">✓ ${side === 'left' ? card.emoji + ' ' : ''}${card.text}</div>
+        </div>`;
+      }
+      const base = 'w-full rounded-2xl border-2 px-2 py-3 text-center transition ';
+      const style = selected
+        ? (side === 'left' ? 'border-sky-500 bg-sky-100 shadow-sm' : 'border-rose-500 bg-rose-100 shadow-sm')
+        : (side === 'left' ? 'border-slate-200 bg-white hover:border-sky-300' : 'border-slate-200 bg-white hover:border-rose-300');
+      return `<button onclick="pickMatch('${side}', ${idx})" class="${base}${style}">
+        <div class="text-xs sm:text-sm font-extrabold ${side === 'left' ? 'text-sky-700' : 'text-rose-600'} truncate w-full">${side === 'left' ? card.emoji + ' ' : ''}${card.text}</div>
+      </button>`;
+    }
+
+    function renderMatch() {
+      document.getElementById('en-memory-pairs').textContent = `已连对: ${matchDone}/6`;
+      document.getElementById('match-left').innerHTML = matchLeft.map((c, i) => matchCardHtml(c, 'left', i)).join('');
+      document.getElementById('match-right').innerHTML = matchRight.map((c, i) => matchCardHtml(c, 'right', i)).join('');
+    }
+
+    function pickMatch(side, idx) {
+      if (matchLock) return;
+      const card = (side === 'left' ? matchLeft : matchRight)[idx];
+      if (card.matched) return;
+
+      // 再点一次取消选择
+      if (matchSel && matchSel.side === side && matchSel.idx === idx) {
+        matchSel = null;
+        renderMatch();
+        return;
+      }
+
+      // 同侧换选，或选中第一张
+      if (!matchSel || matchSel.side === side) {
+        matchSel = { side, idx };
+        renderMatch();
+        if (side === 'left') speakText(card.text, 'en-US');
+        return;
+      }
+
+      // 左右各选了一张，判定是否配对
+      const leftCard = side === 'left' ? card : matchLeft[matchSel.idx];
+      const rightCard = side === 'left' ? matchRight[matchSel.idx] : card;
+
+      if (leftCard.pairId === rightCard.pairId) {
+        leftCard.matched = true;
+        rightCard.matched = true;
+        matchDone++;
+        matchSel = null;
+        const word = matchLeft.find(c => c.pairId === leftCard.pairId);
+        speakText(word.text, 'en-US');
+        updateStarDisplay(1, document.getElementById('en-memory-view'));
+        renderMatch();
+        if (matchDone === 6) {
+          document.getElementById('en-memory-pairs').textContent = '🏆 全部连对啦！太厉害了！';
+          speakText('Amazing! All matched!', 'en-US');
+          setTimeout(initMemoryGame, 2400);
+        }
+      } else {
+        // 连错了：短暂锁定并清除选择
+        matchLock = true;
+        renderMatch();
+        setTimeout(() => { matchSel = null; matchLock = false; renderMatch(); }, 600);
+      }
+    }
+
     // ==================== 6. 中文识字园逻辑 ====================
     let currentZhCat = 'all';
     let currentZhMode = 'learn';
@@ -941,7 +1192,7 @@
 
     function setZhMode(mode) {
       currentZhMode = mode;
-      ['learn', 'quiz'].forEach(m => {
+      ['learn', 'quiz', 'py'].forEach(m => {
         const btn = document.getElementById(`zh-mode-${m}`);
         const view = document.getElementById(`zh-${m}-view`);
         if (m === mode) {
@@ -952,8 +1203,9 @@
           view.classList.add('hidden');
         }
       });
-      document.getElementById('zh-category-bar').classList.toggle('hidden', mode === 'quiz');
+      document.getElementById('zh-category-bar').classList.toggle('hidden', mode !== 'learn');
       if (mode === 'quiz') nextZhQuiz();
+      if (mode === 'py') nextZhPy();
     }
 
     function renderZhCards() {
@@ -1016,6 +1268,48 @@
       }
     }
 
+    // 中文看字选拼音挑战
+    let zhPyTarget = null;
+    let zhPyStreak = 0;
+
+    function nextZhPy() {
+      const shuffled = [...ZH_CHARS].sort(() => Math.random() - 0.5);
+      const options = shuffled.slice(0, 4);
+      zhPyTarget = options[Math.floor(Math.random() * options.length)];
+
+      document.getElementById('zh-py-char').textContent = zhPyTarget.char;
+      document.getElementById('zh-py-feedback').textContent = '';
+
+      document.getElementById('zh-py-options').innerHTML = options.map(opt => `
+        <button onclick="checkZhPy('${opt.pinyin}', this)" class="bubbly-card py-4 font-extrabold text-lg text-rose-600 hover:border-rose-400">
+          ${opt.pinyin}
+        </button>
+      `).join('');
+
+      setTimeout(() => speakText(zhPyTarget.char, 'zh-CN'), 250);
+    }
+
+    function checkZhPy(selected, btnEl) {
+      if (!zhPyTarget) return;
+      const fb = document.getElementById('zh-py-feedback');
+      if (selected === zhPyTarget.pinyin) {
+        zhPyStreak++;
+        document.getElementById('zh-py-streak').textContent = `连胜: ${zhPyStreak} 🔥`;
+        fb.className = 'h-8 font-extrabold text-lg text-emerald-600';
+        fb.textContent = `🎉 答对啦！「${zhPyTarget.char}」读作 ${zhPyTarget.pinyin}`;
+        updateStarDisplay(1, btnEl);
+        speakText(`${zhPyTarget.char}，${zhPyTarget.words.split('、')[0]}`, 'zh-CN');
+        zhPyTarget = null;
+        setTimeout(nextZhPy, 1200);
+      } else {
+        zhPyStreak = 0;
+        document.getElementById('zh-py-streak').textContent = `连胜: 0 🔥`;
+        fb.className = 'h-8 font-extrabold text-base text-rose-500';
+        fb.textContent = '再听一遍读音，想一想声调哦！';
+        speakText(zhPyTarget.char, 'zh-CN');
+      }
+    }
+
     // ==================== 7. 日本小学3年级汉字道场逻辑 ====================
     let currentJpMode = 'learn';
 
@@ -1052,61 +1346,101 @@
       `).join('');
     }
 
-    // 小3汉字テスト（读音与选字双题型）
+    // 小3汉字テスト（模仿漢字検定8級的三大题型：読み方・書きとり・画数）
     let jpQuizTarget = null;
     let jpQuizAnswer = '';
     let jpQuizStreak = 0;
+
+    // 从一个汉字的例词里提取「熟語, 読み」对，例如 "練習（れんしゅう）・訓練（くんれん)"
+    function pickJpWordExample(kanji) {
+      for (const part of kanji.words.split('・')) {
+        const m = part.match(/^(.+?)（(.+?)）$/);
+        if (m) return { word: m[1], reading: m[2] };
+      }
+      return null;
+    }
 
     function nextJpQuiz() {
       const shuffled = [...JP3_KANJI].sort(() => Math.random() - 0.5);
       const options = shuffled.slice(0, 4);
       jpQuizTarget = options[Math.floor(Math.random() * options.length)];
+      const targetExample = pickJpWordExample(jpQuizTarget);
 
-      // 提取第一个例词，例如 "図書館（としょかん）"
-      const firstExample = jpQuizTarget.words.split('・')[0];
-      const match = firstExample.match(/^(.+?)（(.+?)）$/);
-
-      const isReadingQuiz = Math.random() > 0.45 && match;
+      // 随机决定题型（漢検8級ふう）：読み方 / 書きとり / 画数
+      const roll = Math.random();
+      const quizKind = !targetExample ? (roll < 0.5 ? 'kanji' : 'stroke') : (roll < 0.4 ? 'reading' : (roll < 0.75 ? 'kanji' : 'stroke'));
       const badge = document.getElementById('jp-quiz-type-badge');
       const qEl = document.getElementById('jp-quiz-question');
       const subEl = document.getElementById('jp-quiz-sub');
       const optEl = document.getElementById('jp-quiz-options');
       document.getElementById('jp-quiz-feedback').textContent = '';
 
-      if (isReadingQuiz && match) {
-        // 题型A：看词选读音
-        const [, wordKanji, wordReading] = match;
-        jpQuizAnswer = wordReading;
-        badge.textContent = '読み方クイズ（选正确读音）';
-        qEl.textContent = wordKanji;
-        subEl.textContent = `「${jpQuizTarget.char}」の読み方はどれ？`;
+      if (quizKind === 'stroke') {
+        // 漢検ふう ③ 画数：数笔画
+        jpQuizAnswer = jpQuizTarget.strokes;
+        badge.textContent = '漢検ふう ③ 画数';
+        qEl.textContent = jpQuizTarget.char;
+        subEl.textContent = `「${jpQuizTarget.char}」の 画数は いくつ？数えてみよう！`;
 
-        const optReadings = options.map(o => {
-          const m = o.words.split('・')[0].match(/（(.+?)）/);
-          return m ? m[1] : (o.kun !== '—' ? o.kun.split('・')[0] : o.on.split('・')[0]);
-        });
-        // 确保正确答案在选项里且不重复
-        optReadings[options.indexOf(jpQuizTarget)] = wordReading;
+        const strokeOpts = [];
+        options.forEach(o => { if (!strokeOpts.includes(o.strokes)) strokeOpts.push(o.strokes); });
+        for (const k of JP3_KANJI) {
+          if (strokeOpts.length >= 4) break;
+          if (!strokeOpts.includes(k.strokes)) strokeOpts.push(k.strokes);
+        }
+        strokeOpts.sort(() => Math.random() - 0.5);
 
-        optEl.innerHTML = optReadings.map(r => `
+        optEl.innerHTML = strokeOpts.map(s => `
+          <button onclick="checkJpQuiz('${s}', this)" class="bubbly-card py-4 font-extrabold text-lg text-slate-800 hover:border-emerald-400">
+            ${s}画
+          </button>
+        `).join('');
+      } else if (quizKind === 'reading') {
+        // 漢検ふう ① 読み方：给熟语，选假名读音
+        jpQuizAnswer = targetExample.reading;
+        badge.textContent = '漢検ふう ① 読み方';
+        qEl.textContent = targetExample.word;
+        subEl.textContent = `この ことばの 読み方を えらぼう！（含「${jpQuizTarget.char}」）`;
+
+        // 收集 4 个不重复的读音选项
+        const readings = [targetExample.reading];
+        for (const o of options) {
+          if (readings.length >= 4) break;
+          if (o === jpQuizTarget) continue;
+          const ex = pickJpWordExample(o);
+          const r = ex ? ex.reading : (o.kun !== '—' ? o.kun.split('・')[0] : o.on.split('・')[0]);
+          if (r && !readings.includes(r)) readings.push(r);
+        }
+        for (const k of JP3_KANJI) {
+          if (readings.length >= 4) break;
+          const ex = pickJpWordExample(k);
+          const r = ex ? ex.reading : (k.kun !== '—' ? k.kun.split('・')[0] : k.on.split('・')[0]);
+          if (r && !readings.includes(r)) readings.push(r);
+        }
+        readings.sort(() => Math.random() - 0.5);
+
+        optEl.innerHTML = readings.map(r => `
           <button onclick="checkJpQuiz('${r}', this)" class="bubbly-card py-4 px-2 font-extrabold text-base sm:text-lg text-slate-800 hover:border-emerald-400">
             ${r}
           </button>
         `).join('');
-        setTimeout(() => speakText(wordReading, 'ja-JP'), 250);
+        setTimeout(() => speakText(targetExample.reading.replace(/-/g, ''), 'ja-JP'), 250);
       } else {
-        // 题型B：看假名提示选出正确的小3汉字
+        // 漢検ふう ② 書きとり：给假名读音，选对应的汉字
         jpQuizAnswer = jpQuizTarget.char;
-        badge.textContent = '漢字選びクイズ（选正确汉字）';
-        if (match) {
-          qEl.textContent = match[2];
-          subEl.textContent = `「${match[1]}」に使われる漢字はどれ？`;
-          setTimeout(() => speakText(match[2], 'ja-JP'), 250);
+        badge.textContent = '漢検ふう ② 書きとり';
+        const ex = pickJpWordExample(jpQuizTarget);
+        if (ex && ex.word.includes(jpQuizTarget.char)) {
+          // 汉检式挖空：把目标汉字挖掉，例如「練習」→「〇習」，孩子根据读音选汉字
+          const blanked = ex.word.replace(jpQuizTarget.char, '〇');
+          qEl.textContent = ex.reading;
+          subEl.textContent = `「${blanked}」に 入る 漢字は どれ？`;
+          setTimeout(() => speakText(ex.reading.replace(/-/g, ''), 'ja-JP'), 250);
         } else {
           const readingHint = jpQuizTarget.kun !== '—' ? jpQuizTarget.kun : jpQuizTarget.on;
           qEl.textContent = readingHint;
-          subEl.textContent = `この読み方の小学3年漢字はどれ？`;
-          setTimeout(() => speakText(readingHint.replace('-', ''), 'ja-JP'), 250);
+          subEl.textContent = `この 読み方の 小学3年 漢字は どれ？`;
+          setTimeout(() => speakText(readingHint.replace(/-/g, ''), 'ja-JP'), 250);
         }
 
         optEl.innerHTML = options.map(o => `
@@ -1188,25 +1522,157 @@
         `;
       }
 
-      // 初始化 HanziWriter
+      // 初始化 HanziWriter（多 CDN 兜底加载笔顺数据，失败时优雅降级）
       const targetBox = document.getElementById('hanzi-target-box');
       targetBox.innerHTML = '';
-      try {
-        writerInstance = HanziWriter.create('hanzi-target-box', data.char, {
-          width: 200,
-          height: 200,
-          padding: 12,
-          showOutline: true,
-          strokeAnimationSpeed: 1.1,
-          delayBetweenStrokes: 220,
-          strokeColor: lang === 'zh' ? '#E11D48' : '#059669',
-          radicalColor: '#2563EB',
-          outlineColor: '#CBD5E1',
-          drawingWidth: 22
-        });
-        writerInstance.animateCharacter();
-      } catch (e) {
+      const statusEl = document.getElementById('stroke-quiz-status');
+      statusEl.className = 'text-xs font-bold text-slate-500 mt-2 h-4';
+      statusEl.textContent = '正在加载笔顺数据...';
+      writerInstance = null;
+
+      if (typeof HanziWriter === 'undefined') {
+        // 主库都没加载出来：直接显示大字，按钮给出提示
         targetBox.innerHTML = `<span class="text-8xl font-black text-slate-800">${data.char}</span>`;
+        statusEl.className = 'text-xs font-extrabold text-amber-600 mt-2 h-4';
+        statusEl.textContent = '笔顺组件加载失败，请检查网络后刷新页面';
+      } else {
+        try {
+          writerInstance = HanziWriter.create('hanzi-target-box', data.char, {
+            width: 200,
+            height: 200,
+            padding: 12,
+            showOutline: true,
+            strokeAnimationSpeed: 1.1,
+            delayBetweenStrokes: 220,
+            strokeColor: lang === 'zh' ? '#E11D48' : '#059669',
+            radicalColor: '#2563EB',
+            outlineColor: '#CBD5E1',
+            drawingWidth: 22,
+            charDataLoader: function(char, onComplete) {
+              // 中文笔顺数据源（hanzi-writer-data，中文汉字）
+              const zhCdns = [
+                'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0',
+                'https://fastly.jsdelivr.net/npm/hanzi-writer-data@2.0',
+                'https://unpkg.com/hanzi-writer-data@2.0'
+              ];
+              // 日本专用笔顺数据源（hanzi-writer-data-jp，标准日文字形，
+              // 含悪・変・発等日本新字体，笔画与日本汉检一致）
+              const jpCdns = [
+                'https://cdn.jsdelivr.net/npm/@k1low/hanzi-writer-data-jp@0.8.0',
+                'https://fastly.jsdelivr.net/npm/@k1low/hanzi-writer-data-jp@0.8.0'
+              ];
+              // 日本新字体在中文数据库中不存在，映射成中文繁体作为最后兜底
+              const HANZI_VARIANTS = {
+                '悪':'惡','変':'變','発':'發','楽':'樂','実':'實','応':'應','経':'經',
+                '団':'團','転':'轉','鉄':'鐵','涙':'淚','桜':'櫻','浜':'濱','壌':'壤',
+                '礼':'禮','県':'縣','軽':'輕','黒':'黑','氷':'冰','説':'說','対':'對',
+                '図':'圖','従':'從','帰':'歸','験':'驗','駅':'驛',
+                '画':'畫','毎':'每','処':'處','晩':'晚','様':'樣','栄':'榮','広':'廣'
+              };
+              // 候选队列：日语优先用日文库（标准日文字形），再退回中文库
+              const attempts = [];
+              if (lang === 'jp') {
+                jpCdns.forEach(b => attempts.push({ ch: char, base: b, jp: true }));
+              }
+              const variant = HANZI_VARIANTS[char];
+              if (variant) {
+                zhCdns.forEach(b => attempts.push({ ch: variant, base: b, jp: false, variant: true }));
+              }
+              zhCdns.forEach(b => attempts.push({ ch: char, base: b, jp: false }));
+              let idx = 0;
+              let retried = false;
+
+              // 方法1：动态 import()——走 script-src 通道。
+              // 某些沙箱/预览环境的 CSP 会拦截 connect-src（fetch/XHR 全部被禁），
+              // 但允许 script-src 加载 https，jsdelivr 的 +esm 端点可把 JSON 转成 ES 模块
+              function loadViaEsm(jsonUrl) {
+                return import(jsonUrl + '/+esm').then(m => m.default || m);
+              }
+
+              // 方法2：fetch
+              function loadViaFetch(jsonUrl) {
+                return fetch(jsonUrl).then(res => {
+                  if (!res.ok) throw new Error('bad response');
+                  return res.json();
+                });
+              }
+
+              // 方法3：XHR 兜底（个别环境只拦 fetch 不拦 XHR）
+              function loadViaXhr(jsonUrl) {
+                return new Promise((resolve, reject) => {
+                  try {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', jsonUrl, true);
+                    xhr.onload = () => {
+                      try {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                          resolve(JSON.parse(xhr.responseText));
+                        } else {
+                          reject(new Error('xhr ' + xhr.status));
+                        }
+                      } catch (e) { reject(e); }
+                    };
+                    xhr.onerror = () => reject(new Error('xhr network error'));
+                    xhr.send();
+                  } catch (e) { reject(e); }
+                });
+              }
+
+              // 数据就绪：更新提示并立刻播放一遍笔顺动画
+              function finish(json, att) {
+                if (att.jp) {
+                  statusEl.textContent = '✓ 已就绪（日本標準字形・筆順）';
+                } else if (att.variant) {
+                  statusEl.textContent = '✓ 已就绪（日本新字体按中文繁体字形演示，笔数一致）';
+                } else {
+                  statusEl.textContent = '点击「笔顺动画」观看或「手指描红」练习';
+                }
+                onComplete(json);
+                if (writerInstance) writerInstance.animateCharacter();
+              }
+
+              function loadData() {
+                const att = attempts[idx];
+                const jsonUrl = `${att.base}/${encodeURIComponent(att.ch)}.json`;
+                statusEl.className = 'text-xs font-bold text-slate-500 mt-2 h-4';
+                statusEl.textContent = `正在加载笔顺数据...（数据源 ${idx + 1}/${attempts.length}）`;
+
+                // 同一数据源内三通道依次尝试：ES模块导入 → fetch → XHR
+                let loader;
+                if (att.base.includes('unpkg')) {
+                  // unpkg 的 ?module 不支持 JSON 转换，跳过 ES 模块通道
+                  loader = loadViaFetch(jsonUrl).catch(() => loadViaXhr(jsonUrl));
+                } else {
+                  loader = loadViaEsm(jsonUrl)
+                    .catch(() => loadViaFetch(jsonUrl))
+                    .catch(() => loadViaXhr(jsonUrl));
+                }
+
+                loader.then(json => finish(json, att)).catch(() => {
+                  idx++;
+                  if (idx < attempts.length) { loadData(); return; }
+                  // 整条链失败：2 秒后自动重试一轮（应对瞬时网络抖动）
+                  if (!retried) {
+                    retried = true;
+                    idx = 0;
+                    setTimeout(loadData, 2000);
+                    return;
+                  }
+                  // 重试仍失败：优雅降级为静态大字
+                  writerInstance = null;
+                  targetBox.innerHTML = `<span class="text-8xl font-black text-slate-800">${char}</span>`;
+                  statusEl.className = 'text-xs font-extrabold text-amber-600 mt-2 h-4';
+                  statusEl.textContent = '笔顺数据暂时没加载出来（网络原因），先认识一下这个字吧！';
+                });
+              }
+              loadData();
+            }
+          });
+          window._hw = writerInstance; // 调试探针（保留，便于排查笔顺问题）
+        } catch (e) {
+          writerInstance = null;
+          targetBox.innerHTML = `<span class="text-8xl font-black text-slate-800">${data.char}</span>`;
+        }
       }
 
       speakModalChar();
@@ -1220,11 +1686,16 @@
             document.getElementById('stroke-quiz-status').textContent = '演示完成！可以试试「手指描红练习」哦';
           }
         });
+      } else {
+        document.getElementById('stroke-quiz-status').textContent = '笔顺数据还没准备好，稍等一下或检查网络哦';
       }
     }
 
     function startHanziQuiz() {
-      if (!writerInstance) return;
+      if (!writerInstance) {
+        document.getElementById('stroke-quiz-status').textContent = '笔顺数据还没准备好，稍等一下或检查网络哦';
+        return;
+      }
       const statusEl = document.getElementById('stroke-quiz-status');
       statusEl.className = 'text-xs font-extrabold text-emerald-600 mt-2 h-4';
       statusEl.textContent = '✍️ 请用手指在方格里一笔一画描红！';
